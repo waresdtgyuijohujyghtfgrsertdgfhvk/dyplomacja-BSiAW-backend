@@ -1,4 +1,3 @@
-
 from app import db
 
 GameStatus = db.Enum('lobby', 'active', 'finished', name='game_status')
