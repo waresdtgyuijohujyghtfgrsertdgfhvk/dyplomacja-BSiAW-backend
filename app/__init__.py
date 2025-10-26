@@ -10,8 +10,9 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     app.config.from_pyfile('../config.py', silent=True)
+    print(app.config['SQLALCHEMY_DATABASE_URI'])
     db.init_app(app)
     migrate.init_app(app, db)
     return app
 
-from app import routes, models
+
