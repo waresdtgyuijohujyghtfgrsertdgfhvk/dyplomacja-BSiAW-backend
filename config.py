@@ -1,0 +1,1 @@
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://diplomacy:test@localhost:3306/diplomacy'
