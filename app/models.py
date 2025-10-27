@@ -1,7 +1,7 @@
 from app import db
 
 GameStatus = db.Enum('lobby', 'active', 'finished', name='game_status')
-TurnPhase  = db.Enum('planning', 'resolution', 'done',   name='turn_phase')
+TurnPhase  = db.Enum('spring','spring-disband','fall','fall-disband'   name='turn_phase')
 
 
 class User(db.Model):
@@ -64,7 +64,7 @@ class Turn(db.Model):
                           db.ForeignKey("game.id", ondelete="CASCADE"),
                           nullable=False)
     number    = db.Column(db.Integer, nullable=False, server_default="1")
-    state_json= db.Column(db.String(128))
+    state_json= db.Column(db.String(4096))
     phase     = db.Column(TurnPhase, nullable=False, server_default="planning")
 
     game   = db.relationship("Game", back_populates="turns")
@@ -86,8 +86,7 @@ class Orders(db.Model):
     player_id = db.Column(db.Integer,
                           db.ForeignKey("nation.id", ondelete="CASCADE"),
                           nullable=False)
-    type      = db.Column(db.String(32), nullable=False)
-    payload   = db.Column(db.String(128))
+    payload   = db.Column(db.String(512))
     created_at= db.Column(db.DateTime(timezone=True),
                           nullable=False, server_default=db.func.now())
 
