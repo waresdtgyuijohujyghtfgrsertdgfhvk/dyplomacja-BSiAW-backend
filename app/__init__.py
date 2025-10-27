@@ -12,7 +12,7 @@ def create_app():
     app.config.from_pyfile('../config.py', silent=True)
     db.init_app(app)
     migrate.init_app(app, db)
-    db.init_app(app)
+    #db.init_app(app)
 
     @app.get("/")
     def root():

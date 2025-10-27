@@ -2,12 +2,23 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import IntegrityError
 from . import db
-from .models import Game, Nation, Turn, Orders, Message
+from .models import Game, Nation, Turn, Orders, Message, User
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
+
+
+
+@api.post("/users")
+def create_users():
+    data = request.get_json(force=True, silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password_hash = (data.get("password_hash") or "").strip()
+    u = User(username=username, password_hash=password_hash)
+    db.session.add(u); db.session.commit()
+    return jsonify({"ok": True,"uid": u.id}), 201
 
 # ------- GAME -------
 
