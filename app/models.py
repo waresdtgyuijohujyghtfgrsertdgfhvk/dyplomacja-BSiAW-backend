@@ -72,7 +72,7 @@ class Turn(db.Model):
                              cascade="all, delete-orphan")
 
     __table_args__ = (
-        db.Index("idx_turn_game_num", "game_id", "number")
+        db.Index("idx_turn_game_num", "game_id", "number"),
     )
 
 
