@@ -9,6 +9,14 @@ api = Blueprint("api", __name__, url_prefix="/api")
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
+class OrderItem:
+    def __init__(self,src_region,dst_region):
+        self.src_region = src_region
+        self.dst_region = dst_region
+        self.support = 1
+        self.type = type
+
+
 
 
 @api.post("/users")
@@ -144,20 +152,25 @@ def add_nation(gid):
 
 # ------- TURN -------
 
-@api.post("/games/<int:gid>/turns")
-def create_turn(gid):
+@api.post("/games/<int:gid>/new-turn")
+def advance_turn(gid):
     g = Game.query.get_or_404(gid)
-    data = request.get_json(force=True, silent=True) or {}
-    number = data.get("number")
-    phase  = data.get("phase")
-    if not isinstance(number, int) or number < 1:
-        return jerr("number must be positive int")
-    t = Turn(game_id=g.id, number=number, phase=phase or "planning")
-    try:
-        db.session.add(t); db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        return jerr("turn with this number already exists", 409)
+    prev_turns = Turn.query.filter_by(game_id=g.id)
+    last_trun:Turn = prev_turns.query.order_by(Turn.id.desc()).first()
+    turn_orders = Orders.query.filter_by(game_id=g.id,turn_id=last_trun.id)
+    if last_trun.phase== "spring" or last_trun.phase== "fall":
+        regions = [line.spllit(',')[0] for line in last_trun.state.split("\n")]
+        orders:list[OrderItem] = []
+        for order in turn_orders:
+            for item in order.payload.split("\n"):
+                if item.contains("$H"):
+                    orders.append()
+        for region in regions:
+
+        year_no = data.get("number")
+        phase  = data.get("phase")
+    t = Turn(game_id=g.id, number=year_no, phase=phase)
+
     return jsonify({"ok": True, "turn_id": t.id}), 201
 
 # ------- ORDERS -------
