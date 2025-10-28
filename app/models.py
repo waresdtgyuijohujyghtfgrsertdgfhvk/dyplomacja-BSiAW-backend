@@ -1,7 +1,7 @@
 from app import db
 
 GameStatus = db.Enum('lobby', 'active', 'finished', name='game_status')
-TurnPhase  = db.Enum('spring','spring-disband','fall','fall-disband','planning', name='turn_phase')
+TurnPhase  = db.Enum('spring','spring-disband','fall','fall-disband', name='turn_phase')
 
 
 class User(db.Model):
