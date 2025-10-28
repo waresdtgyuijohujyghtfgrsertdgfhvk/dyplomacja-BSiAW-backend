@@ -64,8 +64,8 @@ class Turn(db.Model):
                           db.ForeignKey("game.id", ondelete="CASCADE"),
                           nullable=False)
     number    = db.Column(db.Integer, nullable=False, server_default="1")
-    state_json= db.Column(db.String(4096))
-    phase     = db.Column(TurnPhase, nullable=False, server_default="planning")
+    state     = db.Column(db.String(4096))
+    phase     = db.Column(TurnPhase, nullable=False, server_default="spring")
 
     game   = db.relationship("Game", back_populates="turns")
     orders = db.relationship("Orders", back_populates="turn",
