@@ -3,7 +3,7 @@ from flask import Flask, jsonify, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, login_required
+from flask_login import LoginManager, login_required, current_user
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -33,7 +33,10 @@ def create_app():
 
     @app.route("/")
     def index():
-        return redirect(url_for("login_page"))
+        if current_user.is_authenticated:
+            return redirect("/lobby")
+        else:
+            return redirect("/login")
 
     @app.route("/login")
     def login_page():

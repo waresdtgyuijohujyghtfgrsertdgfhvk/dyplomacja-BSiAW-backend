@@ -55,6 +55,17 @@
     button#createGameBtn:hover {
       background: #218838;
     }
+    button#logoutBtn {
+      background: #dc3545;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button#logoutBtn:hover {
+      background: #b52a37;
+    }
     .nations {
       margin-top: 10px;
       font-size: 0.9em;
@@ -83,11 +94,16 @@
   <div class="topbar">
     <h1>Game Lobby</h1>
     <button id="createGameBtn">Create New Game</button>
+    <button id="logoutBtn">Logout</button>
   </div>
 
   <div id="gamesList" class="games"></div>
 
   <script>
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.href = "/login";
+    });
     async function loadGames() {
       const res = await fetch("/api/games");
       const data = await res.json();
