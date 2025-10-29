@@ -83,151 +83,203 @@
     .nation.free {
       background: #c8e6c9;
     }
-    select {
-      padding: 5px;
+
+    /* Modal styling */
+    #joinModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 300px;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+    }
+    .modal-content select {
+      width: 100%;
+      padding: 6px;
       border-radius: 5px;
+      margin-bottom: 10px;
       border: 1px solid #ccc;
+    }
+    .modal-content button {
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin: 4px;
+    }
+    #confirmJoin {
+      background: #28a745;
+    }
+    #cancelJoin {
+      background: #dc3545;
     }
   </style>
 </head>
 <body>
   <div class="topbar">
     <h1>Game Lobby</h1>
-    <button id="createGameBtn">Create New Game</button>
-    <button id="logoutBtn">Logout</button>
+    <div>
+      <button id="createGameBtn">Create New Game</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
   </div>
 
   <div id="gamesList" class="games"></div>
 
+  <!-- Join Modal -->
+  <div id="joinModal">
+    <div class="modal-content">
+      <h3>Select Your Nation</h3>
+      <select id="nationSelect"></select><br>
+      <button id="confirmJoin">Join</button>
+      <button id="cancelJoin">Cancel</button>
+    </div>
+  </div>
+
   <script>
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await fetch("/api/logout", { method: "POST" });
-      window.location.href = "/login";
+  let selectedGameId = null;
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/login";
+  });
+
+  async function loadGames() {
+    const res = await fetch("/api/games");
+    const data = await res.json();
+    if (!data.ok) {
+      alert("Failed to load games.");
+      return;
+    }
+
+    const list = document.getElementById("gamesList");
+    if (!data.data.length) {
+      list.innerHTML = "<p>No games available yet. Create one to get started!</p>";
+      return;
+    }
+
+    list.innerHTML = data.data.map(g => `
+      <div class="card">
+        <h3>${g.name}</h3>
+        <p>Status: ${g.status}</p>
+        <p>Started at: ${new Date(g.started_at).toLocaleString()}</p>
+        <button onclick="openJoinModal(${g.id})">Join</button>
+        <div id="nations-${g.id}" class="nations"></div>
+      </div>
+    `).join('');
+
+    for (const g of data.data) loadNations(g.id);
+  }
+
+  async function loadNations(gameId) {
+    const res = await fetch(`/api/games/${gameId}`);
+    const data = await res.json();
+    if (!data.ok) return;
+
+    const div = document.getElementById(`nations-${gameId}`);
+    div.innerHTML = data.nations.map(n => `
+      <span class="nation ${n.user_id ? 'taken' : 'free'}">
+        ${n.name} ${n.user_id ? '(taken)' : '(free)'}
+      </span>
+    `).join('');
+  }
+
+  async function openJoinModal(gameId) {
+    selectedGameId = gameId;
+    console.log("Joining game:", selectedGameId);
+
+    const [gameRes, meRes] = await Promise.all([
+      fetch(`/api/games/${gameId}`),
+      fetch(`/api/me`)
+    ]);
+
+    const gameData = await gameRes.json();
+    const meData = await meRes.json();
+
+    if (!gameData.ok || !meData.ok) {
+      alert("Failed to load game or user info.");
+      return;
+    }
+
+    if (gameData.nations.some(n => String(n.user_id) === String(meData.user.id))) {
+      window.location.href = `/game/${gameId}`;
+      return;
+    }
+
+    const available = gameData.nations.filter(n => !n.user_id);
+    if (!available.length) {
+      alert("No nations left to join!");
+      return;
+    }
+
+    const select = document.getElementById("nationSelect");
+    select.innerHTML = available.map(n => `<option value="${n.name}">${n.name}</option>`).join("");
+
+    document.getElementById("joinModal").style.display = "flex";
+  }
+
+  document.getElementById("confirmJoin").addEventListener("click", async () => {
+    if (!selectedGameId) {
+      alert("Error: no game selected.");
+      return;
+    }
+
+    const nationName = document.getElementById("nationSelect").value;
+    if (!nationName) return;
+
+    console.log("Joining as:", nationName, "to game:", selectedGameId);
+
+    const res = await fetch(`/api/games/${selectedGameId}/nations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: nationName })
     });
-    async function loadGames() {
-      const res = await fetch("/api/games");
-      const data = await res.json();
-      if (!data.ok) {
-        alert("Failed to load games.");
-        return;
-      }
+    const data = await res.json();
 
-      if (!data.data.length) {
-        document.getElementById("gamesList").innerHTML =
-          "<p>No games available yet. Create one to get started!</p>";
-        return;
-      }
+    if (data.ok) {
 
-      document.getElementById("gamesList").innerHTML = data.data.map(g => `
-        <div class="card">
-          <h3>${g.name}</h3>
-          <p>Status: ${g.status}</p>
-          <p>Started at: ${new Date(g.started_at).toLocaleString()}</p>
-          <button onclick="joinGame(${g.id})">Join</button>
-          <div id="nations-${g.id}" class="nations"></div>
-        </div>
-      `).join('');
-
-      // Load nations for each game
-      for (const g of data.data) {
-        loadNations(g.id);
-      }
+      alert(`You joined as ${nationName}!`);
+      const res = await fetch(`/api/games/${selectedGameId}`);
+      window.location.href = `/game/${selectedGameId}`;
+    } else {
+      alert(data.error || "Failed to join game.");
     }
+  });
 
-    async function loadNations(gameId) {
-      const res = await fetch(`/api/games/${gameId}`);
-      const data = await res.json();
-      if (!data.ok) return;
+  async function createGame() {
+    const name = prompt("Enter a name for the new game:");
+    if (!name) return;
 
-      const nationsDiv = document.getElementById(`nations-${gameId}`);
-      if (!nationsDiv) return;
+    const res = await fetch("/api/games", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
 
-      nationsDiv.innerHTML = data.nations.map(n => `
-        <span class="nation ${n.user_id ? 'taken' : 'free'}">
-          ${n.name} ${n.user_id ? '(taken)' : '(free)'}
-        </span>
-      `).join('');
+    if (data.ok) {
+      alert("Game created successfully!");
+      loadGames();
+    } else {
+      alert(data.error || "Failed to create game.");
     }
+  }
 
-    async function createGame() {
-      const name = prompt("Enter a name for the new game:");
-      if (!name) return;
-
-      const res = await fetch("/api/games", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ name })
-      });
-      const data = await res.json();
-
-      if (data.ok) {
-        alert("Game created successfully!");
-        // Immediately join a nation
-        await joinGame(data.id);
-      } else {
-        alert(data.error || "Failed to create game.");
-      }
-    }
-
-    async function joinGame(gameId) {
-      // Fetch game + user info
-      const [gameRes, meRes] = await Promise.all([
-        fetch(`/api/games/${gameId}`),
-        fetch(`/api/me`)
-      ]);
-      const gameData = await gameRes.json();
-      const meData = await meRes.json();
-
-      if (!gameData.ok || !meData.ok) {
-        alert("Failed to load game or user info.");
-        return;
-      }
-
-      // Already joined?
-      if (gameData.nations.some(n => String(n.user_id) === String(meData.user.id))) {
-        window.location.href = `/game/${gameId}`;
-        return;
-      }
-
-      // Filter free nations
-      const available = gameData.nations.filter(n => !n.user_id);
-      if (!available.length) {
-        alert("No nations left to join in this game!");
-        return;
-      }
-
-      // Build select dropdown for available nations
-      const selectHtml = available.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
-      const container = document.createElement('div');
-      container.id = 'joinContainer';
-      container.style.marginTop = "10px";
-      container.innerHTML = `
-        <label>Select your nation: </label>
-        <select id="nationSelect">${selectHtml}</select>
-        <button id="confirmJoin">Join Game</button>
-      `;
-      document.body.appendChild(container);
-
-      document.getElementById("confirmJoin").addEventListener("click", async () => {
-        const nationName = document.getElementById("nationSelect").value;
-        const res = await fetch(`/api/games/${gameId}/nations`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ name: nationName })
-        });
-        const data = await res.json();
-
-        if (data.ok) {
-          alert(`You joined as ${nationName}!`);
-          window.location.href = `/game/${gameId}`;
-        } else {
-          alert(data.error || "Failed to join game.");
-        }
-      });
-    }
-
-    document.getElementById("createGameBtn").addEventListener("click", createGame);
-    loadGames();
-  </script>
+  document.getElementById("createGameBtn").addEventListener("click", createGame);
+  loadGames();
+</script>
 </body>
 </html>
