@@ -1,10 +1,12 @@
-from app import db
+from flask_login import UserMixin
+from app import db, bcrypt, login_manager
+
 
 GameStatus = db.Enum('lobby', 'active', 'finished', name='game_status')
 TurnPhase  = db.Enum('spring','spring-disband','fall','fall-disband', name='turn_phase')
 
 
-class User(db.Model):
+class User(UserMixin,db.Model):
     __tablename__ = "user"
     id            = db.Column(db.Integer, primary_key=True)
     username      = db.Column(db.String(64), unique=True, nullable=False)
@@ -15,6 +17,18 @@ class User(db.Model):
     nations = db.relationship("Nation",
                               back_populates="user",
                               cascade="all, delete-orphan")
+
+    def set_password(self, password: str):
+        from app import bcrypt
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password: str):
+        from app import bcrypt
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 class Game(db.Model):

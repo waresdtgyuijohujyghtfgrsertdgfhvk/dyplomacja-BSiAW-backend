@@ -1,5 +1,6 @@
 # app/api.py
 from flask import Blueprint, request, jsonify
+from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import IntegrityError
 from . import db
 from .models import Game, Nation, Turn, Orders, Message, User
@@ -9,6 +10,46 @@ api = Blueprint("api", __name__, url_prefix="/api")
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
+
+
+
+# ------- AUTH -------
+
+@api.post("/register")
+def register_user():
+    data = request.get_json(force=True, silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password = (data.get("password") or "").strip()
+    if not username or not password:
+        return jerr("username and password required")
+    if User.query.filter_by(username=username).first():
+        return jerr("username already exists", 409)
+    u = User(username=username)
+    u.set_password(password)
+    db.session.add(u)
+    db.session.commit()
+    return jsonify({"ok": True, "user_id": u.id}), 201
+
+
+@api.post("/login")
+def login_user_route():
+    data = request.get_json(force=True, silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    u = User.query.filter_by(username=username).first()
+    if not u or not u.check_password(password):
+        return jerr("invalid credentials", 401)
+
+    login_user(u)
+    return jsonify({"ok": True, "msg": f"logged in as {u.username}"})
+
+
+@api.post("/logout")
+@login_required
+def logout_user_route():
+    logout_user()
+    return jsonify({"ok": True, "msg": "logged out"})
 
 
 @api.post("/users")
@@ -131,15 +172,19 @@ def get_game(gid):
 # ------- NATION (join/assign) -------
 
 @api.post("/games/<int:gid>/nations")
+@login_required
 def add_nation(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("name") or "").strip()
-    user_id = data.get("user_id")
     if not name:
         return jerr("nation name is required")
-    n = Nation(game_id=g.id, user_id=user_id, name=name)
-    db.session.add(n); db.session.commit()
+    # ensure not already taken
+    if Nation.query.filter_by(game_id=g.id, name=name).first():
+        return jerr("Nation already taken", 409)
+    n = Nation(game_id=g.id, user_id=current_user.id, name=name)
+    db.session.add(n)
+    db.session.commit()
     return jsonify({"ok": True, "nation_id": n.id}), 201
 
 # ------- TURN -------
@@ -194,3 +239,11 @@ def post_message(gid):
     msg = Message(game_id=g.id, sender_id=sender_id, recipient_scope=scope, text=text)
     db.session.add(msg); db.session.commit()
     return jsonify({"ok": True, "message_id": msg.id}), 201
+
+@api.get("/me")
+@login_required
+def get_current_user():
+    return jsonify({
+        "ok": True,
+        "user": {"id": current_user.id, "username": current_user.username}
+    })
