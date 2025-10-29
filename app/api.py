@@ -196,6 +196,7 @@ def add_nation(gid):
 # ------- TURN -------
 
 @api.post("/games/<int:gid>/turns")
+@login_required
 def create_turn(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
@@ -214,11 +215,12 @@ def create_turn(gid):
 # ------- ORDERS -------
 
 @api.post("/turns/<int:tid>/orders")
+@login_required
 def post_order(tid):
     t = Turn.query.get_or_404(tid)
     data = request.get_json(force=True, silent=True) or {}
     player_id = data.get("player_id")
-    order_type = (data.get("type") or "order").strip()
+    #order_type = (data.get("type") or "order").strip()
     payload = (data.get("payload") or "").strip()
     if not isinstance(player_id, int):
         return jerr("player_id must be int")
@@ -226,14 +228,34 @@ def post_order(tid):
     n = Nation.query.get(player_id)
     if not n or n.game_id != t.game_id:
         return jerr("player must belong to the same game as turn", 409)
-
-    o = Orders(turn_id=t.id, player_id=player_id, type=order_type, payload=payload)
+    o = Orders(turn_id=t.id, player_id=player_id, payload=payload)
     db.session.add(o); db.session.commit()
     return jsonify({"ok": True, "order_id": o.id}), 201
+
+# GET /api/turns/<int:tid>/orders
+@api.get("/turns/<int:tid>/orders")
+@login_required
+def get_orders(tid):
+    t = Turn.query.get_or_404(tid)
+    orders = Orders.query.filter_by(turn_id=t.id).all()
+    return jsonify({
+        "ok": True,
+        "turn_id": t.id,
+        "orders": [
+            {
+                "id": o.id,
+                "player_id": o.player_id,
+                "player_name": o.player.name if o.player else None,
+                "payload": o.payload
+            }
+            for o in orders
+        ]
+    })
 
 # ------- MESSAGE -------
 
 @api.post("/games/<int:gid>/messages")
+@login_required
 def post_message(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
@@ -245,6 +267,27 @@ def post_message(gid):
     msg = Message(game_id=g.id, sender_id=sender_id, recipient_scope=scope, text=text)
     db.session.add(msg); db.session.commit()
     return jsonify({"ok": True, "message_id": msg.id}), 201
+
+# GET /api/games/<int:gid>/messages
+@api.get("/games/<int:gid>/messages")
+@login_required
+def get_messages(gid):
+    g = Game.query.get_or_404(gid)
+    messages = Message.query.filter_by(game_id=g.id).order_by(Message.created_at).all()
+    return jsonify({
+        "ok": True,
+        "messages": [
+            {
+                "id": m.id,
+                "sender_id": m.sender_id,
+                "sender_name": m.sender.name if m.sender else None,
+                "scope": m.recipient_scope,
+                "text": m.text,
+                "created_at": m.created_at.isoformat()
+            }
+            for m in messages
+        ]
+    })
 
 @api.get("/me")
 @login_required
