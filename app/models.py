@@ -60,7 +60,8 @@ class Nation(db.Model):
                         db.ForeignKey("game.id", ondelete="CASCADE"),
                         nullable=False)
     user_id = db.Column(db.Integer,
-                        db.ForeignKey("user.id", ondelete="SET NULL"))
+                        db.ForeignKey("user.id", ondelete="SET NULL"),
+                        nullable=True)
     name    = db.Column(db.String(32))
 
     game   = db.relationship("Game", back_populates="nations")

@@ -1,182 +1,214 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Lobby – Diplomacy</title>
+  <meta charset="UTF-8">
+  <title>Diplomacy Lobby</title>
   <style>
     body {
-      font-family: sans-serif;
-      margin: 2em;
-      background: #f7f7f7;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
     }
-    header {
+    h1 {
+      color: #333;
+    }
+    .games {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 15px;
+    }
+    .card h3 {
+      margin-top: 0;
+    }
+    .card button {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .card button:hover {
+      background: #0056b3;
+    }
+    .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    button {
-      background: #0066cc;
-      color: white;
+    button#createGameBtn {
+      background: #28a745;
       border: none;
-      padding: 0.5em 1em;
-      border-radius: 0.3em;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
       cursor: pointer;
     }
-    button:hover { background: #004999; }
-    .game {
-      background: white;
-      border-radius: 0.5em;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin: 1em 0;
-      padding: 1em;
+    button#createGameBtn:hover {
+      background: #218838;
     }
-    form#createForm {
-      margin-top: 1em;
-      background: white;
-      padding: 1em;
-      border-radius: 0.5em;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    .nations {
+      margin-top: 10px;
+      font-size: 0.9em;
     }
-    input {
-      padding: 0.5em;
-      margin-right: 0.5em;
-      border-radius: 0.3em;
+    .nation {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #e9ecef;
+    }
+    .nation.taken {
+      background: #ffcccc;
+    }
+    .nation.free {
+      background: #c8e6c9;
+    }
+    select {
+      padding: 5px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-    }
-    .msg {
-      color: red;
-      margin-top: 0.5em;
-    }
-    dialog {
-      border: none;
-      border-radius: 0.5em;
-      padding: 1em;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
-  <header>
+  <div class="topbar">
     <h1>Game Lobby</h1>
-    <button onclick="logout()">Logout</button>
-  </header>
+    <button id="createGameBtn">Create New Game</button>
+  </div>
 
-  <section>
-    <h2>Create New Game</h2>
-    <form id="createForm">
-      <input type="text" id="gameName" placeholder="Game name" required>
-      <button type="submit">Create</button>
-    </form>
-    <p class="msg" id="createMsg"></p>
-  </section>
+  <div id="gamesList" class="games"></div>
 
-  <section>
-    <h2>Available Games</h2>
-    <div id="games"></div>
-  </section>
+  <script>
+    async function loadGames() {
+      const res = await fetch("/api/games");
+      const data = await res.json();
+      if (!data.ok) {
+        alert("Failed to load games.");
+        return;
+      }
 
-  <!-- Join modal -->
-  <dialog id="joinDialog">
-    <h3>Join Game</h3>
-    <p>Select your nation:</p>
-    <select id="nationSelect"></select>
-    <div style="margin-top:1em;">
-      <button onclick="confirmJoin()">Join</button>
-      <button onclick="document.getElementById('joinDialog').close()">Cancel</button>
-    </div>
-  </dialog>
+      if (!data.data.length) {
+        document.getElementById("gamesList").innerHTML =
+          "<p>No games available yet. Create one to get started!</p>";
+        return;
+      }
 
-<script>
-const NATION_NAMES = ["England","France","Germany","Italy","Austria","Russia","Turkey"];
-let currentJoinGameId = null;
+      document.getElementById("gamesList").innerHTML = data.data.map(g => `
+        <div class="card">
+          <h3>${g.name}</h3>
+          <p>Status: ${g.status}</p>
+          <p>Started at: ${new Date(g.started_at).toLocaleString()}</p>
+          <button onclick="joinGame(${g.id})">Join</button>
+          <div id="nations-${g.id}" class="nations"></div>
+        </div>
+      `).join('');
 
-async function loadGames() {
-  const res = await fetch("/api/games");
-  const data = await res.json();
-  const container = document.getElementById("games");
-  if (!data.ok) {
-    container.innerHTML = "<p>Login required. <a href='/login'>Go to login</a></p>";
-    return;
-  }
+      // Load nations for each game
+      for (const g of data.data) {
+        loadNations(g.id);
+      }
+    }
 
-  if (data.data.length === 0) {
-    container.innerHTML = "<p>No games yet. Create one!</p>";
-    return;
-  }
+    async function loadNations(gameId) {
+      const res = await fetch(`/api/games/${gameId}`);
+      const data = await res.json();
+      if (!data.ok) return;
 
-  container.innerHTML = data.data.map(g => `
-    <div class="game">
-      <strong>${g.name}</strong><br>
-      Status: ${g.status || "waiting"}<br>
-      Created: ${g.started_at || "—"}<br>
-      <button onclick="openJoin(${g.id})">Join</button>
-    </div>
-  `).join('');
-}
+      const nationsDiv = document.getElementById(`nations-${gameId}`);
+      if (!nationsDiv) return;
 
-async function openJoin(id) {
-  currentJoinGameId = id;
-  const res = await fetch(`/api/games/${id}`);
-  const data = await res.json();
-  if (!data.ok) {
-    alert("Error loading game info");
-    return;
-  }
-  const taken = data.nations.map(n => n.name);
-  const available = NATION_NAMES.filter(n => !taken.includes(n));
-  const select = document.getElementById("nationSelect");
-  select.innerHTML = available.map(n => `<option value="${n}">${n}</option>`).join('');
-  if (available.length === 0) {
-    alert("All nations already taken!");
-    return;
-  }
-  document.getElementById("joinDialog").showModal();
-}
+      nationsDiv.innerHTML = data.nations.map(n => `
+        <span class="nation ${n.user_id ? 'taken' : 'free'}">
+          ${n.name} ${n.user_id ? '(taken)' : '(free)'}
+        </span>
+      `).join('');
+    }
 
-async function confirmJoin() {
-  const nation = document.getElementById("nationSelect").value;
-  const res = await fetch(`/api/games/${currentJoinGameId}/nations`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ name: nation })
-  });
-  const data = await res.json();
-  if (data.ok) {
-    alert("Joined as " + nation + "!");
-    document.getElementById("joinDialog").close();
+    async function createGame() {
+      const name = prompt("Enter a name for the new game:");
+      if (!name) return;
+
+      const res = await fetch("/api/games", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        alert("Game created successfully!");
+        window.location.href = `/game/${data.id}`;
+      } else {
+        alert(data.error || "Failed to create game.");
+      }
+    }
+
+    async function joinGame(gameId) {
+      // Load game and user data
+      const [gameRes, meRes] = await Promise.all([
+        fetch(`/api/games/${gameId}`),
+        fetch(`/api/me`)
+      ]);
+      const gameData = await gameRes.json();
+      const meData = await meRes.json();
+
+      if (!gameData.ok || !meData.ok) {
+        alert("Failed to load game or user info.");
+        return;
+      }
+
+      // Already joined?
+      if (gameData.nations.some(n => String(n.user_id) === String(meData.user.id))) {
+        window.location.href = `/game/${gameId}`;
+        return;
+      }
+
+      // Find available nations
+      const available = gameData.nations.filter(n => !n.user_id);
+      if (!available.length) {
+        alert("No nations left to join in this game!");
+        return;
+      }
+
+      // Build select dropdown
+      const selectHtml = available.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
+      const container = document.createElement('div');
+      container.innerHTML = `
+        <label>Select your nation: </label>
+        <select id="nationSelect">${selectHtml}</select>
+        <button id="confirmJoin">Join Game</button>
+      `;
+      document.body.appendChild(container);
+
+      document.getElementById("confirmJoin").addEventListener("click", async () => {
+        const nationName = document.getElementById("nationSelect").value;
+        const res = await fetch(`/api/games/${gameId}/nations`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ name: nationName })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          alert(`You joined as ${nationName}!`);
+          window.location.href = `/game/${gameId}`;
+        } else {
+          alert(data.error || "Failed to join game.");
+        }
+      });
+    }
+
+    document.getElementById("createGameBtn").addEventListener("click", createGame);
     loadGames();
-  } else {
-    alert(data.error || "Could not join game");
-  }
-}
-
-document.getElementById("createForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const msg = document.getElementById("createMsg");
-  msg.textContent = "";
-  const res = await fetch("/api/games", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ name: gameName.value })
-  });
-  const data = await res.json();
-  if (data.ok) {
-    msg.style.color = "green";
-    msg.textContent = "Game created!";
-    gameName.value = "";
-    loadGames();
-  } else {
-    msg.style.color = "red";
-    msg.textContent = data.error || "Failed to create game";
-  }
-};
-
-async function logout() {
-  await fetch("/api/logout", { method: "POST" });
-  location.href = "/login";
-}
-
-loadGames();
-</script>
+  </script>
 </body>
 </html>

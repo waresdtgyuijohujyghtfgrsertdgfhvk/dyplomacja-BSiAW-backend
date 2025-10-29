@@ -7,6 +7,11 @@ from .models import Game, Nation, Turn, Orders, Message, User
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
+DEFAULT_NATIONS = [
+    "England", "France", "Germany",
+    "Italy", "Austria", "Russia", "Turkey"
+]
+
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
@@ -51,16 +56,6 @@ def logout_user_route():
     logout_user()
     return jsonify({"ok": True, "msg": "logged out"})
 
-
-@api.post("/users")
-def create_users():
-    data = request.get_json(force=True, silent=True) or {}
-    username = (data.get("username") or "").strip()
-    password_hash = (data.get("password_hash") or "").strip()
-    u = User(username=username, password_hash=password_hash)
-    db.session.add(u); db.session.commit()
-    return jsonify({"ok": True,"uid": u.id}), 201
-
 # ------- GAME -------
 
 @api.get("/games")
@@ -72,6 +67,7 @@ def list_games():
     ]})
 
 @api.post("/games")
+@login_required
 def create_game():
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("name") or "").strip()
@@ -79,6 +75,7 @@ def create_game():
         return jerr("name is required")
     g = Game(name=name)
     db.session.add(g)
+    db.session.flush()  # get g.id
     g.turns.append(Turn(state="""adr,,
 aeg,,
 alb,,
@@ -154,10 +151,13 @@ wal,bri,
 war,rus,arus
 wes,,
 yor,bri,"""))
+    for n in DEFAULT_NATIONS:
+        db.session.add(Nation(name=n, game_id=g.id))
     db.session.commit()
     return jsonify({"ok": True, "id": g.id}), 201
 
 @api.get("/games/<int:gid>")
+@login_required
 def get_game(gid):
     g = Game.query.get_or_404(gid)
     nations = Nation.query.filter_by(game_id=g.id).all()
@@ -174,18 +174,24 @@ def get_game(gid):
 @api.post("/games/<int:gid>/nations")
 @login_required
 def add_nation(gid):
-    g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("name") or "").strip()
     if not name:
         return jerr("nation name is required")
+    g = Game.query.get_or_404(gid)
     # ensure not already taken
-    if Nation.query.filter_by(game_id=g.id, name=name).first():
-        return jerr("Nation already taken", 409)
-    n = Nation(game_id=g.id, user_id=current_user.id, name=name)
-    db.session.add(n)
+    existing = Nation.query.filter_by(game_id=g.id, user_id=current_user.id).first()
+    if existing:
+        return jerr("You already joined this game.")
+    n = Nation.query.filter_by(game_id=g.id, name=name).first()
+    if not n:
+        return jerr("Invalid nation name.")
+    if n.user_id is not None:
+        return jerr("Nation already taken.")
+    n.user_id = current_user.id
+
     db.session.commit()
-    return jsonify({"ok": True, "nation_id": n.id}), 201
+    return jsonify({"ok": True, "nation_id": n.id, "nation_name": n.name}), 201
 
 # ------- TURN -------
 

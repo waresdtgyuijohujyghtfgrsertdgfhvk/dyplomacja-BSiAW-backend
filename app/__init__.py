@@ -48,6 +48,11 @@ def create_app():
     def lobby_page():
         return render_template("lobby.html")
 
+    @app.route('/game/<int:gid>')
+    @login_required
+    def game_page(gid):
+        return render_template('game.html')
+
     return app
 
 
