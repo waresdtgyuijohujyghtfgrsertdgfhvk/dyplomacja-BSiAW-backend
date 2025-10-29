@@ -146,14 +146,15 @@
 
       if (data.ok) {
         alert("Game created successfully!");
-        window.location.href = `/game/${data.id}`;
+        // Immediately join a nation
+        await joinGame(data.id);
       } else {
         alert(data.error || "Failed to create game.");
       }
     }
 
     async function joinGame(gameId) {
-      // Load game and user data
+      // Fetch game + user info
       const [gameRes, meRes] = await Promise.all([
         fetch(`/api/games/${gameId}`),
         fetch(`/api/me`)
@@ -172,16 +173,18 @@
         return;
       }
 
-      // Find available nations
+      // Filter free nations
       const available = gameData.nations.filter(n => !n.user_id);
       if (!available.length) {
         alert("No nations left to join in this game!");
         return;
       }
 
-      // Build select dropdown
+      // Build select dropdown for available nations
       const selectHtml = available.map(n => `<option value="${n.name}">${n.name}</option>`).join('');
       const container = document.createElement('div');
+      container.id = 'joinContainer';
+      container.style.marginTop = "10px";
       container.innerHTML = `
         <label>Select your nation: </label>
         <select id="nationSelect">${selectHtml}</select>
