@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_required, current_user
+from flask_vite import Vite
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -12,6 +13,13 @@ login_manager = LoginManager()
 
 def create_app():
     app = Flask(__name__)
+                # static_url_path='/static')
+
+    # vite setup
+    vite = Vite(app)
+    app.config['VITE_AUTO_INSERT'] = True
+    app.config['VITE_FOLDER_PATH'] = './vite'
+
     app.config.from_pyfile('../config.py', silent=True)
     #app.config.setdefault("SECRET_KEY", "change_this_secret")
     db.init_app(app)
@@ -55,6 +63,10 @@ def create_app():
     @login_required
     def game_page(gid):
         return render_template('game.html')
+
+    @app.route("/mapsvg")
+    def handle_svg():
+        return render_template("diplomacy_wiki.svg")
 
     return app
 
