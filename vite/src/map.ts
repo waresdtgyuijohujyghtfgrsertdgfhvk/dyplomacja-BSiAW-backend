@@ -1,40 +1,69 @@
 const container = document.getElementById('svgContainer')!
 
-interface land {
+interface Land {
     name: string;
     group: SVGGElement;
     country?: "England" | "Germany" | "Russia" | "Turkey" | "AustroHungarian" | "Italy" | "France";
 }
 
-interface water {
+interface Water {
     name: string;
     group: SVGGElement;
 }
 
-interface army {
+interface Army {
     group: SVGGElement;
 }
 
-interface flot {
+interface Flot {
     group: SVGGElement;
 }
 
 
-let land_bodies : land[] = []
-let water_bodies : water[] = []
+let land_bodies : Land[] = []
+let water_bodies : Water[] = []
 let armies : any[] = []
 let fleets : any[] = []
 let sources : any[] = []
 let seen : any[] = []
 
-let countries = {
-    England: ["Cly", "Edi", "Lvp", "Yor", "Wal", "Lon"],
-    Germany: ["Kie", "Ruh", "Mun", "Ber", "Sil", "Pru"],
-    Russia: ["Fin", "Stp", "Mos", "Lvn", "War", "Ukr", "Sev"],
-    Turkey: ["Con", "Ank", "Smy", "Syr", "Arm"],
-    AustroHungarian: ["Gal", "Vie", "Bud", "Tyr", "Boh", "Tri"],
-    Italy: ["Pie", "Ven", "Tus", "Rom", "Apu", "Nap"],
-    France: ["Pic", "Bre", "Par", "Bur", "Gas", "Mar"]
+let countries : {[key: string] : {landNames: string[], landObjects: Land[]}} = {
+    England:  {
+        landNames: ["Cly", "Edi", "Lvp", "Yor", "Wal", "Lon"],
+        landObjects: []
+    },
+    Germany: {
+        landNames: ["Kie", "Ruh", "Mun", "Ber", "Sil", "Pru"],
+        landObjects: []
+    },
+    Russia: {
+        landNames: ["Fin", "Stp", "Mos", "Lvn", "War", "Ukr", "Sev"],
+        landObjects: []
+    },
+    Turkey: {
+        landNames: ["Con", "Ank", "Smy", "Syr", "Arm"],
+        landObjects: []
+    },
+    AustroHungarian: {
+        landNames: ["Gal", "Vie", "Bud", "Tyr", "Boh", "Tri"],
+        landObjects: []
+    },
+    Italy: { 
+        landNames: ["Pie", "Ven", "Tus", "Rom", "Apu", "Nap"],
+        landObjects: []
+    },
+    France: {
+        landNames: ["Pic", "Bre", "Par", "Bur", "Gas", "Mar"],
+        landObjects: []
+    },
+    Neutral: {
+        landNames: ["Spa", "Por", "Bel", "Hol", "Den", "Nwy", "Swe", "Rum", "Bul", "Ser", "Gre", "Alb", "Naf", "Tun"],
+        landObjects: [],
+    },
+    Unplayable: {
+        landNames: [],
+        landObjects: [],
+    }
 }
 
 let mouse = {
@@ -54,12 +83,13 @@ fetch("/mapsvg")
     .then((data: string) => {
         if (container) {
             container.innerHTML = data;
-            const image = container.querySelector("svg")!;
             // image.setAttribute("viewBox", "0 0 1000 1000");
 
+            const image = container.querySelector("svg")!;
             const groups = image.querySelectorAll("g")!;
 
             discern_groups_populate_lists(groups);
+            console.log(countries)
             attachEvents();
         }
     }) .catch((error: Error) => {
@@ -114,12 +144,47 @@ function discern_groups_populate_lists(groups) {
                 if (id.toUpperCase() === id) {
                     water_bodies.push({group: element, name: id})
                 } else {
-                    if (countries.Italy.includes(id)) land_bodies.push({group: element, name: id, country: "Italy"}) 
-                    else if (countries.France.includes(id)) land_bodies.push({group: element, name: id, country: "France"})
-                    else if (countries.Russia.includes(id)) land_bodies.push({group: element, name: id, country: "Russia"})
-                    else if (countries.Turkey.includes(id)) land_bodies.push({group: element, name: id, country: "Turkey"})
-                    else if (countries.England.includes(id)) land_bodies.push({group: element, name: id, country: "England"})
-                    else if (countries.AustroHungarian.includes(id)) land_bodies.push({group: element, name: id, country: "AustroHungarian"})
+                    if (countries.Italy.landNames.includes(id)) {
+                        console.log(id)
+                        const path = element.querySelector("path").classList.add("italy")
+                        land_bodies.push({group: element, name: id, country: "Italy"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "Italy"})
+                    }
+                    else if (countries.France.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("france")
+                        land_bodies.push({group: element, name: id, country: "France"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "France"})
+                    }
+                    else if (countries.Russia.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("russia")
+                        land_bodies.push({group: element, name: id, country: "Russia"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "Russia"})
+                    }
+                    else if (countries.Turkey.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("turkey")
+                        land_bodies.push({group: element, name: id, country: "Turkey"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "Turkey"})
+                    }
+                    else if (countries.England.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("england")
+                        land_bodies.push({group: element, name: id, country: "England"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "England"})
+                    }
+                    else if (countries.AustroHungarian.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("austrohungarian")
+                        land_bodies.push({group: element, name: id, country: "AustroHungarian"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "AustroHungarian"})
+                    }
+                    else if (countries.Germany.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("germany")
+                        land_bodies.push({group: element, name: id, country: "Germany"})
+                        countries.Italy.landObjects.push({group: element, name: id, country: "Germany"})
+                    }
+                    else if (countries.Neutral.landNames.includes(id)) {
+                        const path = element.querySelector("path").classList.add("neutral")
+                        land_bodies.push({group: element, name: id})
+                        countries.Italy.landObjects.push({group: element, name: id})
+                    }
                     else land_bodies.push({group: element, name: id})
                 }
                 seen.push(element)
@@ -150,8 +215,12 @@ function discern_groups_populate_lists(groups) {
 }
 
 
+function colorPolygons() {
+    // countries.England.landObjects.style.fill = "40597D";
+}
+
 function attachEvents() {
-    land_bodies.forEach((element : land) => {
+    land_bodies.forEach((element : Land) => {
         element.group.addEventListener("mouseover", (event) => {
             const divElement = document.getElementById("info") as HTMLDivElement
             let divText = "Land body: " + element.name;
@@ -160,7 +229,7 @@ function attachEvents() {
         })
     })
 
-    water_bodies.forEach((element : water) => {
+    water_bodies.forEach((element : Water) => {
         element.group.addEventListener("mouseover", (event) => {
             const divElement = document.getElementById("info") as HTMLDivElement
             const divText = "Water body: " + element.name;
