@@ -13,3 +13,6 @@ plan, strategize, deploy their army and fleet, control territories and conquer s
 authority over more than half of the 34 supply centers, the game is considered over -- the said player being the
 victor.
 
+Wbrew nazwie repozytorium zawiera projekt całej aplikacji.
+Strona hostowana na wafelowocowy.pl
+

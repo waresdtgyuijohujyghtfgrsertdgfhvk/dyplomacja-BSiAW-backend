@@ -101,7 +101,7 @@ async function loadGame() {
     </div>`).join("");
   const turns = data.turns;
   currentTurn = turns[turns.length - 1];
-  document.getElementById("turn").textContent = `${currentTurn.phase} (${currentTurn.number})`;
+  document.getElementById("turn").textContent = `${currentTurn.phase} ${currentTurn.number+1900}`;
 
   const nationRes = await fetch(`/api/me`);
   const me = await nationRes.json();
