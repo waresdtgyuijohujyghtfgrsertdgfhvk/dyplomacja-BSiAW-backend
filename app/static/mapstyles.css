@@ -1,0 +1,51 @@
+tspan { white-space:pre } 
+.s0 { fill: #ffffdd } 
+.s1 { fill: #99ccff;stroke: #000000;stroke-linejoin: round } 
+.t2 { font-size: 13px;fill: #000000;font-weight: 400;font-family: "LiberationSans", "Liberation Sans" } 
+.s3 { fill: #dddddd;stroke: #000000;stroke-linejoin: round } 
+.s4 { fill: #ffffdd;stroke: #000000;stroke-linejoin: round } 
+.s5 { fill: #ff0000;stroke: #000000 } 
+.s6 { fill: #0000ff;stroke: #000000 } 
+.s7 { fill: #00ffff;stroke: #000000 } 
+.s8 { fill: #808080;stroke: #000000 } 
+.s9 { fill: #00ff00;stroke: #000000 } 
+.s10 { fill: #008000;stroke: #000000 } 
+.s11 { fill: #ffff00;stroke: #000000 } 
+
+.s1 {
+    fill: #9CBCE6;
+}
+
+.s10 {
+    fill: #eeeeee;
+}
+
+.s8 {
+    fill: #292624;
+}
+
+.england {
+    fill: #314F8C;
+}
+
+.germany {
+    fill: #62665B;
+}
+.russia {
+    fill: #EDE5DA;
+}
+.turkey {
+    fill: #DEC4A2;
+}
+.austrohungarian {
+    fill: #CC9993;
+}
+.italy {
+    fill: #7DB086;
+}
+.france {
+    fill: #51998D;
+}
+.neutral {
+    fill: #aaaaaa;
+}

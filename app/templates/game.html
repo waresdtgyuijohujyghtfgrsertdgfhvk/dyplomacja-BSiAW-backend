@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Diplomacy – Gra</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mapstyles.css') }}">
   <style>
     #map {
       background: #e8e8e8;
@@ -33,7 +34,7 @@
 <body>
   <header>
     <h2 id="gameTitle">Gra</h2>
-    <button onclick="backToLobby()">Powrót do lobby</button>
+    <button onclick="backToLobby()">Return to the Lobby</button>
   </header>
 
   <div class="card">
@@ -47,7 +48,10 @@
     <p><strong>Your Nation:</strong> <span id="myNation"></span></p>
   </div>
 
-  <div id="map">[Game map – placeholder]</div>
+  <div id="info" class="info">Unit information</div>
+  <div id="svgContainer"></div>
+
+  <!-- <div id="map">[Game map – placeholder]</div> -->
 
   <div class="grid">
     <div class="card">
@@ -179,5 +183,10 @@ function backToLobby() {
 
 loadGame();
 </script>
+
+<!-- <script src=../../vite/main.ts></script> -->
+<!-- <script src=main.ts></script> -->
+ {{ vite_tags() }} 
 </body>
+
 </html>
