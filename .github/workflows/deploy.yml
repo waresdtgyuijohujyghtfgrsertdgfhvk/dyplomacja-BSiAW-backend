@@ -29,8 +29,7 @@ jobs:
       - name: Build and push image to ACR
         uses: docker/build-push-action@v5
         with:
-          context: ./dyplomacja-BSiAW-backend
-          file: ./dyplomacja-BSiAW-backend/Dockerfile
+          context: .
           push: true
           tags: |
             ${{ env.ACR_NAME }}.azurecr.io/diplomacy-backend:latest
