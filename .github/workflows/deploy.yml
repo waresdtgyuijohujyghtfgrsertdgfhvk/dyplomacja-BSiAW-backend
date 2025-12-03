@@ -2,7 +2,7 @@ name: CI/CD to Azure Container Apps via ACR
 
 on:
   push:
-    branches: [ "main", "aliaksei" ]
+    branches: [ "aliaksei" ]
 
 jobs:
   build-and-deploy:
