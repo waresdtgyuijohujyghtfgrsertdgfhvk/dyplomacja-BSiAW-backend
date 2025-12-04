@@ -3,10 +3,9 @@ import sys
 import os
 import pytest
 
-# Добавляем каталог app в sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'app')))
 
-from create_app import create_app  # или просто из app
+from create_app import create_app
 from db import db
 from models import User
 
