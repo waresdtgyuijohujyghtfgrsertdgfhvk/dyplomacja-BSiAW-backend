@@ -70,4 +70,4 @@ def create_app():
 
     return app
 
-
+new_variable_for_ci_cd = 'CI/CD is working!'
