@@ -5,7 +5,7 @@ on:
     branches: [ "aliaksei", "main", "vitalii"]
 
 jobs:
-  foo:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     env:
