@@ -1,6 +1,15 @@
+
+import sys
+import os
 import pytest
-from app import create_app, db
-from app.models import User
+
+# Добавляем каталог app в sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'app')))
+
+from create_app import create_app  # или просто из app
+from db import db
+from models import User
+
 
 
 @pytest.fixture
