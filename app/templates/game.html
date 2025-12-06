@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diplomacy – Gra</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mapstyles.css') }}">
+  <style>
+    #map {
+      background: #e8e8e8;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1em 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1em;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 0.5em;
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2 id="gameTitle">Gra</h2>
+    <button onclick="backToLobby()">Return to the Lobby</button>
+  </header>
+
+  <div class="card">
+    <h2>Players</h2>
+    <div id="players">
+      <p>Loading players...</p>
+    </div>
+    <h3>Game properties</h3>
+    <p><strong>Status:</strong> <span id="status"></span></p>
+    <p><strong>Turn:</strong> <span id="turn"></span></p>
+    <p><strong>Your Nation:</strong> <span id="myNation"></span></p>
+  </div>
+
+  <div id="info" class="info">Unit information</div>
+  <div id="svgContainer"></div>
+
+  <!-- <div id="map">[Game map – placeholder]</div> -->
+
+  <div class="grid">
+    <div class="card">
+      <h3>Your orders</h3>
+      <form id="orderForm">
+        <input type="text" id="orderText" placeholder="np. A Lon - Nth" required>
+        <button type="submit">Send order</button>
+      </form>
+      <div id="ordersList"></div>
+    </div>
+
+    <div class="card">
+      <h3>Messages</h3>
+      <div id="messages" style="max-height:200px; overflow-y:auto; background:#f9f9f9; border:1px solid #ccc; padding:0.5em; border-radius:4px;"></div>
+      <form id="msgForm" style="margin-top:0.5em;">
+        <textarea id="msgText" placeholder="Send message..."></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+const gid = window.location.pathname.split("/").pop();
+let currentTurn = null;
+let myNation = null;
+
+// === Pobierz szczegóły gry ===
+async function loadGame() {
+  const res = await fetch(`/api/games/${gid}`);
+  const data = await res.json();
+  if (!data.ok) {
+    alert("Failed to load game.");
+    return;
+  }
+
+  document.getElementById("gameTitle").textContent = data.game.name;
+  document.getElementById("status").textContent = data.game.status;
+  const playersDiv = document.getElementById("players");
+  const joinedPlayers = data.nations.filter(n => n.user_id);
+  if (!joinedPlayers.length) {
+    playersDiv.innerHTML = "<p>No players joined yet.</p>";
+    return;
+  }
+  playersDiv.innerHTML = joinedPlayers.map(n => `
+    <div class="player">
+        <strong>${n.name}</strong> — User ID: ${n.user_id}
+    </div>`).join("");
+  const turns = data.turns;
+  currentTurn = turns[turns.length - 1];
+  document.getElementById("turn").textContent = `${currentTurn.phase} ${currentTurn.number+1900}`;
+
+  const nationRes = await fetch(`/api/me`);
+  const me = await nationRes.json();
+  if (me.ok) {
+    const nation = data.nations.find(n => n.user_id === me.user.id);
+    console.log(nation);
+    if (nation) {
+      myNation = nation;
+      document.getElementById("myNation").textContent = nation.name;
+    } else {
+      document.getElementById("myNation").textContent = "Fail to find your nation";
+    }
+  }
+
+  loadOrders();
+  loadMessages();
+}
+
+// === Rozkazy ===
+async function loadOrders() {
+  if (!myNation || !currentTurn) return;
+  const res = await fetch(`/api/turns/${currentTurn.id}/orders`);
+  const data = await res.json();
+  if (data.ok) {
+    const myOrders = data.orders.filter(o => o.player_id === myNation.id);
+    document.getElementById("ordersList").innerHTML =
+      myOrders.map(o => `<div>${o.payload}</div>`).join('') || "<p>No orders</p>";
+  }
+}
+
+document.getElementById("orderForm").onsubmit = async (e) => {
+  e.preventDefault();
+  if (!myNation || !currentTurn) return alert("Nation or turn not loaded.");
+  const payload = orderText.value.trim();
+  const res = await fetch(`/api/turns/${currentTurn.id}/orders`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ player_id: myNation.id, payload })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    orderText.value = "";
+    loadOrders();
+  } else alert(data.error || "Failed to send order.");
+};
+
+// === Wiadomości ===
+async function loadMessages() {
+  const res = await fetch(`/api/games/${gid}/messages`);
+  const data = await res.json();
+  if (data.ok) {
+    const box = document.getElementById("messages");
+    box.innerHTML = data.messages.map(m => `
+      <div><strong>${m.sender_name}:</strong> ${m.text}</div>
+    `).join('') || "<p>No messages</p>";
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+document.getElementById("msgForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const text = msgText.value.trim();
+  if (!text) return;
+  const res = await fetch(`/api/games/${gid}/messages`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ text, sender_id: myNation?.id })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    msgText.value = "";
+    loadMessages();
+  }
+};
+
+function backToLobby() {
+  location.href = "/lobby";
+}
+
+loadGame();
+</script>
+
+<!-- <script src=../../vite/main.ts></script> -->
+<!-- <script src=main.ts></script> -->
+ {{ vite_tags() }} 
+</body>
+
+</html>

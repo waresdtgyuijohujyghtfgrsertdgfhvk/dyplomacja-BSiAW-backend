@@ -1,24 +1,60 @@
 # app/api.py
 from flask import Blueprint, request, jsonify
+from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import IntegrityError
 from . import db
 from .models import Game, Nation, Turn, Orders, Message, User
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
+DEFAULT_NATIONS = [
+    "England", "France", "Germany",
+    "Italy", "Austria", "Russia", "Turkey"
+]
+
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
 
 
-@api.post("/users")
-def create_users():
+
+# ------- AUTH -------
+
+@api.post("/register")
+def register_user():
     data = request.get_json(force=True, silent=True) or {}
     username = (data.get("username") or "").strip()
-    password_hash = (data.get("password_hash") or "").strip()
-    u = User(username=username, password_hash=password_hash)
-    db.session.add(u); db.session.commit()
-    return jsonify({"ok": True,"uid": u.id}), 201
+    password = (data.get("password") or "").strip()
+    if not username or not password:
+        return jerr("username and password required")
+    if User.query.filter_by(username=username).first():
+        return jerr("username already exists", 409)
+    u = User(username=username)
+    u.set_password(password)
+    db.session.add(u)
+    db.session.commit()
+    return jsonify({"ok": True, "user_id": u.id}), 201
+
+
+@api.post("/login")
+def login_user_route():
+    data = request.get_json(force=True, silent=True) or {}
+    username = (data.get("username") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    u = User.query.filter_by(username=username).first()
+    if not u or not u.check_password(password):
+        return jerr("invalid credentials", 401)
+
+    login_user(u)
+    return jsonify({"ok": True, "msg": f"logged in as {u.username}"})
+
+
+@api.post("/logout")
+@login_required
+def logout_user_route():
+    logout_user()
+    return jsonify({"ok": True, "msg": "logged out"})
 
 # ------- GAME -------
 
@@ -31,6 +67,7 @@ def list_games():
     ]})
 
 @api.post("/games")
+@login_required
 def create_game():
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("name") or "").strip()
@@ -38,6 +75,7 @@ def create_game():
         return jerr("name is required")
     g = Game(name=name)
     db.session.add(g)
+    db.session.flush()  # get g.id
     g.turns.append(Turn(state="""adr,,
 aeg,,
 alb,,
@@ -113,10 +151,13 @@ wal,bri,
 war,rus,arus
 wes,,
 yor,bri,"""))
+    for n in DEFAULT_NATIONS:
+        db.session.add(Nation(name=n, game_id=g.id))
     db.session.commit()
     return jsonify({"ok": True, "id": g.id}), 201
 
 @api.get("/games/<int:gid>")
+@login_required
 def get_game(gid):
     g = Game.query.get_or_404(gid)
     nations = Nation.query.filter_by(game_id=g.id).all()
@@ -131,20 +172,31 @@ def get_game(gid):
 # ------- NATION (join/assign) -------
 
 @api.post("/games/<int:gid>/nations")
+@login_required
 def add_nation(gid):
-    g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("name") or "").strip()
-    user_id = data.get("user_id")
     if not name:
         return jerr("nation name is required")
-    n = Nation(game_id=g.id, user_id=user_id, name=name)
-    db.session.add(n); db.session.commit()
-    return jsonify({"ok": True, "nation_id": n.id}), 201
+    g = Game.query.get_or_404(gid)
+    # ensure not already taken
+    existing = Nation.query.filter_by(game_id=g.id, user_id=current_user.id).first()
+    if existing:
+        return jerr("You already joined this game.")
+    n = Nation.query.filter_by(game_id=g.id, name=name).first()
+    if not n:
+        return jerr("Invalid nation name.")
+    if n.user_id is not None:
+        return jerr("Nation already taken.")
+    n.user_id = current_user.id
+
+    db.session.commit()
+    return jsonify({"ok": True, "nation_id": n.id, "nation_name": n.name}), 201
 
 # ------- TURN -------
 
 @api.post("/games/<int:gid>/turns")
+@login_required
 def create_turn(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
@@ -163,11 +215,12 @@ def create_turn(gid):
 # ------- ORDERS -------
 
 @api.post("/turns/<int:tid>/orders")
+@login_required
 def post_order(tid):
     t = Turn.query.get_or_404(tid)
     data = request.get_json(force=True, silent=True) or {}
     player_id = data.get("player_id")
-    order_type = (data.get("type") or "order").strip()
+    #order_type = (data.get("type") or "order").strip()
     payload = (data.get("payload") or "").strip()
     if not isinstance(player_id, int):
         return jerr("player_id must be int")
@@ -175,14 +228,34 @@ def post_order(tid):
     n = Nation.query.get(player_id)
     if not n or n.game_id != t.game_id:
         return jerr("player must belong to the same game as turn", 409)
-
-    o = Orders(turn_id=t.id, player_id=player_id, type=order_type, payload=payload)
+    o = Orders(turn_id=t.id, player_id=player_id, payload=payload)
     db.session.add(o); db.session.commit()
     return jsonify({"ok": True, "order_id": o.id}), 201
+
+# GET /api/turns/<int:tid>/orders
+@api.get("/turns/<int:tid>/orders")
+@login_required
+def get_orders(tid):
+    t = Turn.query.get_or_404(tid)
+    orders = Orders.query.filter_by(turn_id=t.id).all()
+    return jsonify({
+        "ok": True,
+        "turn_id": t.id,
+        "orders": [
+            {
+                "id": o.id,
+                "player_id": o.player_id,
+                "player_name": o.player.name if o.player else None,
+                "payload": o.payload
+            }
+            for o in orders
+        ]
+    })
 
 # ------- MESSAGE -------
 
 @api.post("/games/<int:gid>/messages")
+@login_required
 def post_message(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
@@ -194,3 +267,32 @@ def post_message(gid):
     msg = Message(game_id=g.id, sender_id=sender_id, recipient_scope=scope, text=text)
     db.session.add(msg); db.session.commit()
     return jsonify({"ok": True, "message_id": msg.id}), 201
+
+# GET /api/games/<int:gid>/messages
+@api.get("/games/<int:gid>/messages")
+@login_required
+def get_messages(gid):
+    g = Game.query.get_or_404(gid)
+    messages = Message.query.filter_by(game_id=g.id).order_by(Message.created_at).all()
+    return jsonify({
+        "ok": True,
+        "messages": [
+            {
+                "id": m.id,
+                "sender_id": m.sender_id,
+                "sender_name": m.sender.name if m.sender else None,
+                "scope": m.recipient_scope,
+                "text": m.text,
+                "created_at": m.created_at.isoformat()
+            }
+            for m in messages
+        ]
+    })
+
+@api.get("/me")
+@login_required
+def get_current_user():
+    return jsonify({
+        "ok": True,
+        "user": {"id": current_user.id, "username": current_user.username}
+    })
