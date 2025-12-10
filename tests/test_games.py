@@ -46,3 +46,17 @@ def test_add_players_to_game(client,db,users):
     response = client.post('/api/logout')
     assert b'out' in response.data
 
+def test_create_order(client):
+    user = {"username": "userA", "password": "test_2025A"}
+    response = client.post('/api/login', json=user, content_type='application/json')
+    assert response.status_code == 200
+
+    order_data = {
+        'player_id': 1,
+        'payload': 'Some order payload'
+    }
+    response = client.post(f'/api/turns/1/orders', json=order_data)
+    assert response.status_code == 201
+    assert b'"ok":true' in response.data
+    response = client.post('/api/logout')
+    assert b'out' in response.data
