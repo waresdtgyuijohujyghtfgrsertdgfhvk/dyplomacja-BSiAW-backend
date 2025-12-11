@@ -28,7 +28,6 @@ jobs:
         run: |
           bandit -r app -ll -iii -f txt -o bandit-report.txt
 
-
       - name: Run Semgrep (strict)
         run: |
           semgrep \
