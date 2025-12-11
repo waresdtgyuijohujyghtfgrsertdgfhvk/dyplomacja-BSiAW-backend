@@ -36,7 +36,6 @@ jobs:
             --error \
             app \
             --output semgrep-report.txt
-      
 
       - name: Upload SAST reports
         if: always()
