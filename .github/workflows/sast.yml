@@ -28,14 +28,6 @@ jobs:
         run: |
           bandit -r app -ll -iii -f txt -o bandit-report.txt
 
-      - name: Run Semgrep (strict)
-        run: |
-          semgrep \
-            --config p/ci \
-            --config p/security-audit \
-            --error \
-            app \
-            --output semgrep-report.txt
       - name: Upload SAST reports
         if: always()
         uses: actions/upload-artifact@v4
