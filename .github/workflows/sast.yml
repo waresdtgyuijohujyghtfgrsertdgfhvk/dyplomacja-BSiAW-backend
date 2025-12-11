@@ -34,9 +34,9 @@ jobs:
             --config p/ci \
             --config p/security-audit \
             --error \
-            --severity-threshold=WARNING \
             app \
             --output semgrep-report.txt
+      
 
       - name: Upload SAST reports
         if: always()
