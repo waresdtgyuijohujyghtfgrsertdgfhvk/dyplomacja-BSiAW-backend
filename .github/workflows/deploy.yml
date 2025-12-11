@@ -13,6 +13,7 @@ jobs:
       APP_NAME: ${{ secrets.AZURE_CONTAINERAPP_NAME }}
       RG_NAME:  ${{ secrets.AZURE_RG }}
       SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      DATABASE_URL: "sqlite:///memory"
 
     steps:
       - name: Checkout
@@ -32,6 +33,7 @@ jobs:
       - name: Run tests
         run: |
          pytest --maxfail=1 --disable-warnings -q
+
 
 
       - name: Login to Azure
