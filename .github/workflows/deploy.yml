@@ -3,7 +3,6 @@ name: CI/CD to Azure Container Apps via ACR
 on:
   push:
     branches: [ "aliaksei", "main", "vitalii"]
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
