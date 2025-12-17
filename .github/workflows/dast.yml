@@ -1,9 +1,15 @@
 name: SAST
 
 on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow against'
+        required: true
+        default: 'main'
   push:
     branches:
-      - main
+      - '**'  # This will trigger on pushes to any branch
 
 jobs:
   build:
