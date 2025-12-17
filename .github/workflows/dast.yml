@@ -9,7 +9,7 @@ on:
         default: 'main'
   push:
     branches:
-      - '**'  # This will trigger on pushes to any branch
+      - '**'
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
 
       - name: Start Flask App Container
         run: |
-          docker run --name myflaskapp -d -e DATABASE_URL=postgresql://user:password@localhost/mydatabase -p 5000:5000 myflaskapp
+          docker run --name myflaskapp -d -e DATABASE_URL=postgresql://user:password@mypostgres/mydatabase -p 5000:5000 myflaskapp
 
       - name: Wait for Flask app
         run: |
