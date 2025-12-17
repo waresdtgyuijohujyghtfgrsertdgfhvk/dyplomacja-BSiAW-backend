@@ -1,4 +1,5 @@
 # app/__init__.py
+
 from flask import Flask, jsonify, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -22,8 +23,8 @@ def create_app():
             ]
         }
     })
-    from .routes import api_bp
-    app.register_blueprint(api_bp, url_prefix="/api")
+    # from .routes import api_bp
+    # app.register_blueprint(api_bp, url_prefix="/api")
     # vite setup
     vite = Vite(app)
     app.config['VITE_AUTO_INSERT'] = True
@@ -47,7 +48,8 @@ def create_app():
 
     # from app.api import api
     # app.register_blueprint(api)
-
+    from .api import api
+    app.register_blueprint(api)
     @app.route("/")
     def index():
         if current_user.is_authenticated:
