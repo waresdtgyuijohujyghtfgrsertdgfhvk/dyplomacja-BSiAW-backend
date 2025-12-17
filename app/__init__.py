@@ -18,8 +18,9 @@ def create_app():
     CORS(app, resources={
         r"/api/*": {
             "origins": [
+                "https://eternalsummer.cc",
                 "https://eternalsummer.cc.azurewebsites.net",
-                "http://localhost:5173"
+                "http://localhost:5173",
             ]
         }
     })
