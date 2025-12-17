@@ -19,9 +19,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Create docker network
+        run: |
+          docker network create mynetwork
+
       - name: Start PostgreSQL Container
         run: |
-          docker run --name mypostgres -d -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase -p 5432:5432 postgres:latest
+          docker run --network=mynetwork --name mypostgres -d -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=mydatabase -p 5432:5432 postgres:latest
 
       - name: Wait for PostgreSQL
         run: |
@@ -36,7 +40,7 @@ jobs:
 
       - name: Start Flask App Container
         run: |
-          docker run --name myflaskapp -d -e DATABASE_URL=postgresql://user:password@mypostgres/mydatabase -p 5000:5000 myflaskapp
+          docker run --network=mynetwork --name myflaskapp -d -e DATABASE_URL=postgresql://user:password@mypostgres/mydatabase -p 5000:5000 myflaskapp
 
       - name: Wait for Flask app
         run: |
@@ -52,7 +56,7 @@ jobs:
 
       - name: Run ZAP scan
         run: |
-          docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
+          docker run --network=mynetwork -t owasp/zap2docker-stable zap-baseline.py -t http://myflaskapp:5000 -r zap_report.html
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
