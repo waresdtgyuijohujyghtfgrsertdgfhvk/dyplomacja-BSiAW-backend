@@ -45,8 +45,8 @@ def create_app():
     @app.get("/healthz")
     def healthz(): return "OK", 200
 
-    from app.api import api
-    app.register_blueprint(api)
+    # from app.api import api
+    # app.register_blueprint(api)
 
     @app.route("/")
     def index():
