@@ -1,4 +1,3 @@
-from app import app
 from app.models import Game
 from flask import Blueprint
 api_bp = Blueprint("api", __name__)
