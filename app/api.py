@@ -29,6 +29,8 @@ def register_user():
         return jerr("username and password required")
     if User.query.filter_by(username=username).first():
         return jerr("username already exists", 409)
+    if len(password) < 8:
+        return jerr("password too short", 409)
     u = User(username=username)
     u.set_password(password)
     db.session.add(u)
