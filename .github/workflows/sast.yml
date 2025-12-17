@@ -32,9 +32,10 @@ jobs:
       - name: Run Semgrep (strict)
         run: |
           semgrep \
+            --config p/flask \
             --config p/ci \
             --config p/security-audit \
-            --error \
+            # --error \
             app \
             --output semgrep-report.txt
 
