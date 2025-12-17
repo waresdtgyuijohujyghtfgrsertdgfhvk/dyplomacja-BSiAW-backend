@@ -35,7 +35,7 @@ jobs:
             --config p/ci \
             --config p/security-audit \
             --error \
-            --severity-threshold=WARNING \
+            --severity-threshold WARNING \
             app \
             --output semgrep-report.txt
 
