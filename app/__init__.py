@@ -5,7 +5,7 @@ from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_required, current_user
 from flask_vite import Vite
-
+from flask_cors import CORS
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
@@ -14,7 +14,16 @@ login_manager = LoginManager()
 def create_app():
     app = Flask(__name__)
                 # static_url_path='/static')
-
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "https://eternalsummer.cc.azurewebsites.net",
+                "http://localhost:5173"
+            ]
+        }
+    })
+    from .routes import api_bp
+    app.register_blueprint(api_bp, url_prefix="/api")
     # vite setup
     vite = Vite(app)
     app.config['VITE_AUTO_INSERT'] = True
@@ -70,4 +79,4 @@ def create_app():
 
     return app
 
-new_variable_for_ci_cd = 'CI/CD is working!'
+
