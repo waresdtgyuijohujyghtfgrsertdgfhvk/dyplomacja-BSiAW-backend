@@ -1,4 +1,4 @@
-name: SAST
+name: DAST
 
 on:
   workflow_dispatch:
@@ -55,7 +55,7 @@ jobs:
           docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html
 
       - name: Upload ZAP Report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: zap_report.html
