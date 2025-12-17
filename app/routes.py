@@ -5,12 +5,12 @@ api_bp = Blueprint("api", __name__)
 @api_bp.route("/test")
 def test():
     return {"status": "ok"}
-@app.route("/")
+@api_bp.route("/")
 def index():
     return "test"
 
 
-@app.route("/games")
+@api_bp.route("/games")
 def get_games():
     games = Game.query.all()
     return games
