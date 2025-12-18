@@ -64,6 +64,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target: 'http://localhost:5000'
           rules_file_name: '.zap/rules.tsv'
+          allow_issue_writing: 'false'
           cmd_options: '-a'
 
       #- name: Start ZAP Container
