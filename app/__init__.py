@@ -22,6 +22,13 @@ def create_app():
                 "https://eternalsummer.cc.azurewebsites.net",
                 "http://localhost:5173",
             ]
+        },
+        r"/login": {
+            "origins": [
+                "https://eternalsummer.cc",
+                "https://eternalsummer.cc.azurewebsites.net",
+                "http://localhost:5173",
+            ]
         }
     })
 
