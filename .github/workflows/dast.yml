@@ -51,8 +51,8 @@ jobs:
 
       - name: Run database migrations
         run: |
-          docker exec myflaskapp flask db migrate
           docker exec myflaskapp flask db upgrade
+          docker exec myflaskapp flask db migrate
 
       - name: Run ZAP scan
         run: |
