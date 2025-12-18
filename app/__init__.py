@@ -21,6 +21,7 @@ def create_app():
                 "https://eternalsummer.cc",
                 "https://eternalsummer.cc.azurewebsites.net",
                 "http://localhost:5173",
+                "https://diplomacy-app--0000027.proudwater-b1846509.westeurope.azurecontainerapps.io/login"
             ]
         },
         r"/*": {
@@ -28,6 +29,7 @@ def create_app():
                 "https://eternalsummer.cc",
                 "https://eternalsummer.cc.azurewebsites.net",
                 "http://localhost:5173",
+                "https://diplomacy-app--0000027.proudwater-b1846509.westeurope.azurecontainerapps.io/login"
             ]
         }
     })
