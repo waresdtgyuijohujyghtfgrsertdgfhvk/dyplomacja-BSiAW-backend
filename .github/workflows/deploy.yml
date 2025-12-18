@@ -1,9 +1,16 @@
 name: CI/CD to Azure Container Apps via ACR
 
 on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow against'
+        required: true
+        default: 'main'
   push:
     branches:
       - main
+      - vitalii
   pull_request:
     branches:
       - main
