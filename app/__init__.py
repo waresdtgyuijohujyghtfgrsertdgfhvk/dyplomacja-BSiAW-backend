@@ -40,16 +40,13 @@ def create_app():
         r"/api/*": {
             "origins": [
                 "https://eternalsummer.cc",
-                "https://eternalsummer.cc.azurewebsites.net",
-                "http://localhost:5173",
-                "https://www.google.com"            ]
+                "http://localhost:5173"
+                         ]
         },
         r"/*": {
             "origins": [
                 "https://eternalsummer.cc",
-                "https://eternalsummer.cc.azurewebsites.net",
-                "http://localhost:5173",
-                "https://www.google.com"
+                "http://localhost:5173"
             ]
         }
     })
