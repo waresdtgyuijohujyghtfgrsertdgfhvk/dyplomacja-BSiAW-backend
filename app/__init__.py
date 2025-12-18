@@ -75,6 +75,10 @@ def create_app():
         else:
             return redirect("/login")
 
+    @app.route("/rate-test", methods=["GET"])
+    @limiter.limit("5 per minute")
+    def rate_test():
+        return {"ok": True}, 200
     @app.route("/login")
     @limiter.limit("5 per minute")
     def login_page():
