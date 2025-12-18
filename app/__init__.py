@@ -16,6 +16,19 @@ login_manager = LoginManager()
 
 def create_app():
     app = Flask(__name__)
+
+    @app.after_request
+    def set_security_headers(response):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self' http://localhost:5173 https://eternalsummer.cc;"
+            "frame-ancestors 'none'; "
+        )
+        return response
                 # static_url_path='/static')
     limiter = Limiter(
         get_remote_address,
