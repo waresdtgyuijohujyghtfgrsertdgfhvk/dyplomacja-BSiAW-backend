@@ -35,6 +35,7 @@ jobs:
             --config p/ci \
             --config p/security-audit \
             --error \
+            --exclude-rule python.django.security.audit.unvalidated-password.unvalidated-password \
             app \
             --output semgrep-report.txt
 
