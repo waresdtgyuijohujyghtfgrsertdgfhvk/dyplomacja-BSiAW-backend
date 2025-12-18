@@ -12,3 +12,6 @@ pluggy==1.6.0
 Pygments==2.19.2
 pytest==9.0.1
 flask-vite==0.6.1
+flask-cors
+flask-talisman
+Flask-Limiter
