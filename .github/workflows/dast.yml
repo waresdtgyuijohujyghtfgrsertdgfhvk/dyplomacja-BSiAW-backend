@@ -77,8 +77,8 @@ jobs:
 
       - name: ZAP Scan
         run: |
-          docker exec zaproxy zap-baseline.py -t http://myflaskapp:5000 -r /zap/wrk/zap_report.html
-          docker run -t -v zapreports:/zap/reports owasp/zap2docker-stable zap-baseline.py -t http://your-application-url.com -r /zap/reports/zap_report.htm    l
+          docker exec zaproxy zap-baseline.py -t http://myflaskapp:5000 -r /zap/reports/zap_report.html
+          # docker run -t -v zapreports:/zap/reports owasp/zap2docker-stable zap-baseline.py -t http://your-application-url.com -r /zap/reports/zap_report.htm    l
 
 
       - name: Upload ZAP Report
