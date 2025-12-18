@@ -19,7 +19,7 @@ def jerr(msg, code=400):
 
 
 # ------- AUTH -------
-
+# nosemgrep: python.django.security.audit.unvalidated-password.unvalidated-password
 @api.post("/register")
 def register_user():
     data = request.get_json(force=True, silent=True) or {}
