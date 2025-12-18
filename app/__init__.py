@@ -7,6 +7,8 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_required, current_user
 from flask_vite import Vite
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
@@ -15,6 +17,12 @@ login_manager = LoginManager()
 def create_app():
     app = Flask(__name__)
                 # static_url_path='/static')
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per minute"],
+        storage_uri="memory://",
+    )
     CORS(app, resources={
         r"/api/*": {
             "origins": [
@@ -68,6 +76,7 @@ def create_app():
             return redirect("/login")
 
     @app.route("/login")
+    @limiter.limit("5 per minute")
     def login_page():
         return render_template("login.html")
 
