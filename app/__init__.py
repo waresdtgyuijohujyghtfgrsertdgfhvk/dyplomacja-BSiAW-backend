@@ -21,14 +21,14 @@ def create_app():
                 "https://eternalsummer.cc",
                 "https://eternalsummer.cc.azurewebsites.net",
                 "http://localhost:5173",
-                "https://www.google.com/"            ]
+                "https://www.google.com"            ]
         },
         r"/*": {
             "origins": [
                 "https://eternalsummer.cc",
                 "https://eternalsummer.cc.azurewebsites.net",
                 "http://localhost:5173",
-                "https://www.google.com/"
+                "https://www.google.com"
             ]
         }
     })
