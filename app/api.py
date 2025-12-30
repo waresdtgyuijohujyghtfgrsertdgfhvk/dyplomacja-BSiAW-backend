@@ -16,7 +16,15 @@ def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
 
-
+def is_strong_password(password):
+    # Example: at least 8 chars, contains a digit and a letter
+    if len(password) < 8:
+        return False
+    if not any(c.isdigit() for c in password):
+        return False
+    if not any(c.isalpha() for c in password):
+        return False
+    return True
 
 # ------- AUTH -------
 
@@ -29,6 +37,8 @@ def register_user():
         return jerr("username and password required")
     if User.query.filter_by(username=username).first():
         return jerr("username already exists", 409)
+    if not is_strong_password(password):
+        return jerr("Password too weak", 409)
     u = User(username=username)
     u.set_password(password)
     db.session.add(u)

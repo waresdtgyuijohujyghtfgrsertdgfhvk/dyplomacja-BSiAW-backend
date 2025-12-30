@@ -1,11 +1,14 @@
 # app/__init__.py
+
 from flask import Flask, jsonify, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_required, current_user
 from flask_vite import Vite
-
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
@@ -13,8 +16,43 @@ login_manager = LoginManager()
 
 def create_app():
     app = Flask(__name__)
-                # static_url_path='/static')
 
+    @app.after_request
+    def set_security_headers(response):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self' http://localhost:5173 https://eternalsummer.cc;"
+            "frame-ancestors 'none'; "
+        )
+        return response
+                # static_url_path='/static')
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per minute"],
+        storage_uri="memory://",
+    )
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "https://eternalsummer.cc",
+                "http://localhost:5173"
+                         ]
+        },
+        r"/*": {
+            "origins": [
+                "https://eternalsummer.cc",
+                "http://localhost:5173"
+            ]
+        }
+    })
+
+    # from .routes import api_bp
+    # app.register_blueprint(api_bp, url_prefix="/api")
     # vite setup
     vite = Vite(app)
     app.config['VITE_AUTO_INSERT'] = True
@@ -36,9 +74,10 @@ def create_app():
     @app.get("/healthz")
     def healthz(): return "OK", 200
 
-    from app.api import api
+    # from app.api import api
+    # app.register_blueprint(api)
+    from .api import api
     app.register_blueprint(api)
-
     @app.route("/")
     def index():
         if current_user.is_authenticated:
@@ -46,7 +85,12 @@ def create_app():
         else:
             return redirect("/login")
 
+    @app.route("/rate-test", methods=["GET"])
+    @limiter.limit("5 per minute")
+    def rate_test():
+        return {"ok": True}, 200
     @app.route("/login")
+    @limiter.limit("5 per minute")
     def login_page():
         return render_template("login.html")
 
