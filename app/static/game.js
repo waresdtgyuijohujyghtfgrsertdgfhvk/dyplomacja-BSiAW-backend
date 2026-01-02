@@ -101,8 +101,6 @@ document.getElementById("msgForm").onsubmit = async (e) => {
   }
 };
 
-function backToLobby() {
-  location.href = "/lobby";
-}
+
 
 loadGame();
