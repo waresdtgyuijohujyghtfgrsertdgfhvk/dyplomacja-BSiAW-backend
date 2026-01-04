@@ -1,4 +1,6 @@
 # app/api.py
+import datetime
+
 from flask import Blueprint, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import IntegrityError
@@ -11,6 +13,7 @@ DEFAULT_NATIONS = [
     "England", "France", "Germany",
     "Italy", "Austria", "Russia", "Turkey"
 ]
+DEFAULT_TURN_MINUTES = 5
 
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
@@ -83,7 +86,7 @@ def create_game():
     name = (data.get("name") or "").strip()
     if not name:
         return jerr("name is required")
-    g = Game(name=name)
+    g = Game(name=name, ends_at=datetime.datetime.now() + datetime.timedelta(minutes=5))
     db.session.add(g)
     db.session.flush()  # get g.id
     g.turns.append(Turn(state="""adr,,
