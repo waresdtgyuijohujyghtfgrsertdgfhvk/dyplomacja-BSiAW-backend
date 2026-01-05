@@ -24,11 +24,13 @@ let selectedGameId = null;
         <h3>${g.name}</h3>
         <p>Status: ${g.status}</p>
         <p>Started at: ${new Date(g.started_at).toLocaleString()}</p>
-        <button onclick="openJoinModal(${g.id})">Join</button>
+        <button name="${g.id}">Join</button>
         <div id="nations-${g.id}" class="nations"></div>
       </div>
     `).join('');
-
+    for (let button of list.getElementsByTagName("button")) {
+      button.addEventListener("click",()=>openJoinModal(button.name))
+    }
     for (const g of data.data) loadNations(g.id);
   }
 
