@@ -269,12 +269,19 @@ def get_orders(tid):
 def post_message(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
-    sender_id = data.get("sender_id")         # Nation.id
+    user:Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first()
     scope     = (data.get("recipient_scope") or "all").strip()
+    if scope != "all":
+        recipient = Nation.query.filter_by(game_id=g.id).filter_by(name=scope).first()
+        if recipient is None:
+            return jerr("nobody to send message to", 403)
+        if recipient.id == user.id:
+            return jerr("can't send messages to yourself",403)
+        scope = f"direct:{recipient.id}"
     text      = (data.get("text") or "").strip()
     if not text:
         return jerr("text is required")
-    msg = Message(game_id=g.id, sender_id=sender_id, recipient_scope=scope, text=text)
+    msg = Message(game_id=g.id, sender_id=user.id, recipient_scope=scope, text=text)
     db.session.add(msg); db.session.commit()
     return jsonify({"ok": True, "message_id": msg.id}), 201
 
@@ -283,15 +290,20 @@ def post_message(gid):
 @login_required
 def get_messages(gid):
     g = Game.query.get_or_404(gid)
-    messages = Message.query.filter_by(game_id=g.id).order_by(Message.created_at).all()
+    user:Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first()
+    messages_from_user = Message.query.filter_by(game_id=g.id).filter_by(sender_id=user.id).order_by(Message.created_at).all()
+    messages_to_user = Message.query.filter_by(game_id=g.id).filter_by(recipient_scope=f"direct:{user.id}").order_by(Message.created_at).all()
+    public_messages = Message.query.filter_by(game_id=g.id).filter(Message.sender_id != user.id,Message.recipient_scope=="all").all()
+    messages = messages_from_user + messages_to_user + public_messages
+    other_nations:list[Nation] = Nation.query.filter_by(game_id=g.id).filter(Nation.id!=current_user.id).all()
+    other_nations_dict = dict(zip([n.id for n in other_nations],[n.name for n in other_nations]))
+    print(other_nations_dict)
     return jsonify({
         "ok": True,
         "messages": [
             {
-                "id": m.id,
-                "sender_id": m.sender_id,
                 "sender_name": m.sender.name if m.sender else None,
-                "scope": m.recipient_scope,
+                "recipient": "all" if m.recipient_scope == "all" else "me" if m.recipient_scope == f"direct:{user.id}" else f"{other_nations_dict[int(m.recipient_scope.removeprefix('direct:'))]}",
                 "text": m.text,
                 "created_at": m.created_at.isoformat()
             }

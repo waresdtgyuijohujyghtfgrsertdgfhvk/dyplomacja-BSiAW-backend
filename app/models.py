@@ -121,7 +121,7 @@ class Message(db.Model):
                                 nullable=False)
     sender_id       = db.Column(db.Integer,
                                 db.ForeignKey("nation.id", ondelete="SET NULL"))
-    recipient_scope = db.Column(db.String(32))   # 'all' | 'ally' | 'direct:<id>'
+    recipient_scope = db.Column(db.String(32))   # 'all' | 'direct:<id>'
     text            = db.Column(db.String(2000), nullable=False)
     created_at      = db.Column(db.DateTime(timezone=True),
                                 nullable=False, server_default=db.func.now())
