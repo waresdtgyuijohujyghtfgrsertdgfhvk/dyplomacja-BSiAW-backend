@@ -263,7 +263,7 @@ def get_orders(tid):
 def post_message(gid):
     g = Game.query.get_or_404(gid)
     data = request.get_json(force=True, silent=True) or {}
-    user: Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first()
+    user: Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first_or_404()
     scope = (data.get("recipient_scope") or "all").strip()
     if scope != "all":
         recipient = Nation.query.filter_by(game_id=g.id).filter_by(name=scope).first()
@@ -286,7 +286,7 @@ def post_message(gid):
 @login_required
 def get_messages(gid):
     g = Game.query.get_or_404(gid)
-    user: Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first()
+    user: Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first_or_404()
     messages_from_user = Message.query.filter_by(game_id=g.id).filter_by(sender_id=user.id).order_by(
         Message.created_at).all()
     messages_to_user = Message.query.filter_by(game_id=g.id).filter_by(recipient_scope=f"direct:{user.id}").order_by(
