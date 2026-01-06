@@ -1,4 +1,5 @@
 # app/__init__.py
+import logging
 
 from flask import Flask, jsonify, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -9,12 +10,32 @@ from flask_vite import Vite
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import sys
+from logging.config import dictConfig
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
 
 def create_app():
+
+
+    dictConfig({
+        'version': 1,
+        'formatters': {'default': {
+            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        }},
+        'handlers': {'wsgi': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',  # <-- Solution
+            'formatter': 'default'
+        }},
+        'root': {
+            'level': 'INFO',
+            'handlers': ['wsgi']
+        }
+    })
+
     app = Flask(__name__)
 
     @app.after_request

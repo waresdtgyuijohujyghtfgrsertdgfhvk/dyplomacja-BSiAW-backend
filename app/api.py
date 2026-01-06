@@ -1,4 +1,6 @@
 # app/api.py
+import logging
+
 from flask import Blueprint, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import IntegrityError
@@ -43,6 +45,7 @@ def register_user():
     u.set_password(password)
     db.session.add(u)
     db.session.commit()
+    logging.info(F"New user {username}")
     return jsonify({"ok": True, "user_id": u.id}), 201
 
 
@@ -57,15 +60,16 @@ def login_user_route():
         return jerr("invalid credentials", 401)
 
     login_user(u)
+    logging.info(F"User {username} login")
     return jsonify({"ok": True, "msg": f"logged in as {u.username}"})
 
 
 @api.post("/logout")
 @login_required
 def logout_user_route():
+    logging.info(F"User {current_user.id} login")
     logout_user()
     return jsonify({"ok": True, "msg": "logged out"})
-
 # ------- GAME -------
 
 @api.get("/games")
