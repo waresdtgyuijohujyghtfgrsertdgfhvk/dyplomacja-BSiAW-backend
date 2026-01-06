@@ -18,6 +18,10 @@ def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
 
+def sanitize_html(string:str):
+    return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def is_strong_password(password):
     # Example: at least 8 chars, contains a digit and a letter
     if len(password) < 8:
@@ -88,7 +92,7 @@ def create_game():
     name = (data.get("name") or "").strip()
     if not name:
         return jerr("name is required")
-    g = Game(name=name)
+    g = Game(name=sanitize_html(name))
     db.session.add(g)
     db.session.flush()  # get g.id
     g.turns.append(Turn(state="""adr,,
@@ -219,7 +223,7 @@ def post_order(tid):
     data = request.get_json(force=True, silent=True) or {}
     user: Nation = Nation.query.filter_by(game_id=turn.game_id).filter_by(user_id=current_user.id).first_or_404()
     payload = (data.get("payload") or "").strip()
-    o = Orders(turn_id=turn.id, player_id=user.id, payload=payload)
+    o = Orders(turn_id=turn.id, player_id=user.id, payload=sanitize_html(payload))
     db.session.add(o);
     db.session.commit()
     return jsonify({"ok": True, "order_id": o.id}), 201
@@ -271,7 +275,7 @@ def post_message(gid):
     text = (data.get("text") or "").strip()
     if not text:
         return jerr("text is required")
-    msg = Message(game_id=g.id, sender_id=user.id, recipient_scope=scope, text=text)
+    msg = Message(game_id=g.id, sender_id=user.id, recipient_scope=scope, text=sanitize_html(text))
     db.session.add(msg);
     db.session.commit()
     return jsonify({"ok": True, "message_id": msg.id}), 201
