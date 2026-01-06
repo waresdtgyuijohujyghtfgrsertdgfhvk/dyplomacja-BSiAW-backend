@@ -255,7 +255,7 @@ def auto_arbitration():
             if latest_turn.id!=turn.id:
                 continue
             db.session.add(new_turn)
-            g = Game.query.filter(Game.game_id == game.id).first()
+            g = Game.query.filter(Game.id == game.id).first()
             g.ends_at = datetime.now() + timedelta(days=1)
             db.session.add(g)
             db.session.commit()
