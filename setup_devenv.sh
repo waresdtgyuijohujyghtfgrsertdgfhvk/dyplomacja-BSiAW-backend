@@ -5,7 +5,7 @@ pip3 install -r requirements.txt
 pip3 install psycopg2-binary
 
 #update the database
-flask db merge
+flask db migrate
 flask db upgrade
 
 # run flask server

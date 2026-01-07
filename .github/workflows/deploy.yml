@@ -1,49 +1,59 @@
-name: CI/CD to Azure Container Apps via ACR
+name: CI/CD to AKS via ACR
 
 on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to run the workflow against"
+        required: true
+        default: "main"
   push:
     branches: ["**"]
   pull_request:
+    branches: ["**"]
 
 jobs:
   ci:
-    name: CI (SAST)
+    name: CI (pytest)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch || github.ref }}
 
-      - name: Set up Python (for Bandit)
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Bandit
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install bandit
+          pip install -r requirements.txt
 
-      - name: Run Bandit (SAST)
+      - name: Run tests
         run: |
-          bandit -r app -ll
-
-      - name: Run Semgrep (SAST)
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/ci
+          pytest --maxfail=1 --disable-warnings -q
 
   deploy:
-    name: CD (Deploy to Azure)
+    name: CD (Build & Deploy to AKS)
     runs-on: ubuntu-latest
     needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     env:
       ACR_NAME: ${{ secrets.AZURE_ACR_NAME }}
-      APP_NAME: ${{ secrets.AZURE_CONTAINERAPP_NAME }}
-      RG_NAME: ${{ secrets.AZURE_RG }}
       SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AKS_RG: ${{ secrets.AZURE_AKS_RG }}
+      AKS_NAME: ${{ secrets.AZURE_AKS_NAME }}
+
+      K8S_NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
+      K8S_DEPLOYMENT: ${{ secrets.K8S_DEPLOYMENT }}
+      K8S_CONTAINER: ${{ secrets.K8S_CONTAINER }}
+
+      IMAGE_REPO: ${{ secrets.IMAGE_REPO }}
 
     steps:
       - name: Checkout
@@ -66,17 +76,20 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.ACR_NAME }}.azurecr.io/diplomacy-backend:${{ github.sha }}
-            ${{ env.ACR_NAME }}.azurecr.io/diplomacy-backend:latest
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_REPO }}:${{ github.sha }}
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_REPO }}:latest
 
-      - name: Deploy to Azure Container Apps
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az account set --subscription $SUBSCRIPTION_ID
+      - name: Get AKS credentials
+        run: |
+          az account set --subscription $SUBSCRIPTION_ID
+          az aks get-credentials --resource-group $AKS_RG --name $AKS_NAME --overwrite-existing
 
-            az containerapp update \
-              --name $APP_NAME \
-              --resource-group $RG_NAME \
-              --image $ACR_NAME.azurecr.io/diplomacy-backend:${{ github.sha }} \
-              --set-env-vars DATABASE_URL='${{ secrets.DATABASE_URL }}' FLASK_ENV='production'
+      - name: Deploy to AKS (kubectl set image)
+        run: |
+          kubectl -n $K8S_NAMESPACE set image deployment/$K8S_DEPLOYMENT \
+            $K8S_CONTAINER=$ACR_NAME.azurecr.io/$IMAGE_REPO:${{ github.sha }} \
+            --record
+
+      - name: Verify rollout
+        run: |
+          kubectl -n $K8S_NAMESPACE rollout status deployment/$K8S_DEPLOYMENT
