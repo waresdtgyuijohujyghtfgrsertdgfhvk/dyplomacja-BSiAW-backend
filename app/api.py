@@ -1,7 +1,7 @@
 # app/api.py
 import logging
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import IntegrityError
 from . import db
@@ -295,6 +295,8 @@ def post_message(gid):
 def get_messages(gid):
     g = Game.query.get_or_404(gid)
     user:Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first()
+    if user is None:
+         return jerr("you have no access here", 403)
     messages_from_user = Message.query.filter_by(game_id=g.id).filter_by(sender_id=user.id).order_by(Message.created_at).all()
     messages_to_user = Message.query.filter_by(game_id=g.id).filter_by(recipient_scope=f"direct:{user.id}").order_by(Message.created_at).all()
     public_messages = Message.query.filter_by(game_id=g.id).filter(Message.sender_id != user.id,Message.recipient_scope=="all").all()
