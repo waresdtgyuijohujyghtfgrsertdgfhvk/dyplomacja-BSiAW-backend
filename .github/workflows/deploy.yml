@@ -1,5 +1,4 @@
 name: CI/CD to AKS via ACR
-
 on:
   workflow_dispatch:
     inputs:
