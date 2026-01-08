@@ -1,10 +1,12 @@
-from app import db
+from flask_login import UserMixin
+from app import db, bcrypt, login_manager
+
 
 GameStatus = db.Enum('lobby', 'active', 'finished', name='game_status')
 TurnPhase  = db.Enum('spring','spring-disband','fall','fall-disband', name='turn_phase')
 
 
-class User(db.Model):
+class User(UserMixin,db.Model):
     __tablename__ = "user"
     id            = db.Column(db.Integer, primary_key=True)
     username      = db.Column(db.String(64), unique=True, nullable=False)
@@ -15,6 +17,18 @@ class User(db.Model):
     nations = db.relationship("Nation",
                               back_populates="user",
                               cascade="all, delete-orphan")
+
+    def set_password(self, password: str):
+        from app import bcrypt
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password: str):
+        from app import bcrypt
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 class Game(db.Model):
@@ -46,7 +60,8 @@ class Nation(db.Model):
                         db.ForeignKey("game.id", ondelete="CASCADE"),
                         nullable=False)
     user_id = db.Column(db.Integer,
-                        db.ForeignKey("user.id", ondelete="SET NULL"))
+                        db.ForeignKey("user.id", ondelete="SET NULL"),
+                        nullable=True)
     name    = db.Column(db.String(32))
 
     game   = db.relationship("Game", back_populates="nations")
@@ -72,7 +87,7 @@ class Turn(db.Model):
                              cascade="all, delete-orphan")
 
     __table_args__ = (
-        db.Index("idx_turn_game_num", "game_id", "number")
+        db.Index("idx_turn_game_num", "game_id", "number"),
     )
 
 
@@ -106,7 +121,7 @@ class Message(db.Model):
                                 nullable=False)
     sender_id       = db.Column(db.Integer,
                                 db.ForeignKey("nation.id", ondelete="SET NULL"))
-    recipient_scope = db.Column(db.String(32))   # 'all' | 'ally' | 'direct:<id>'
+    recipient_scope = db.Column(db.String(32))   # 'all' | 'direct:<id>'
     text            = db.Column(db.String(2000), nullable=False)
     created_at      = db.Column(db.DateTime(timezone=True),
                                 nullable=False, server_default=db.func.now())

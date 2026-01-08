@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Diplomacy Lobby</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .games {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 15px;
+    }
+    .card h3 {
+      margin-top: 0;
+    }
+    .card button {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .card button:hover {
+      background: #0056b3;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    button#createGameBtn {
+      background: #28a745;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button#createGameBtn:hover {
+      background: #218838;
+    }
+    button#logoutBtn {
+      background: #dc3545;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button#logoutBtn:hover {
+      background: #b52a37;
+    }
+    .nations {
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    .nation {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #e9ecef;
+    }
+    .nation.taken {
+      background: #ffcccc;
+    }
+    .nation.free {
+      background: #c8e6c9;
+    }
+
+    /* Modal styling */
+    #joinModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 300px;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+    }
+    .modal-content select {
+      width: 100%;
+      padding: 6px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+    }
+    .modal-content button {
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin: 4px;
+    }
+    #confirmJoin {
+      background: #28a745;
+    }
+    #cancelJoin {
+      background: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Game Lobby</h1>
+    <div>
+      <button id="createGameBtn">Create New Game</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <div id="gamesList" class="games"></div>
+
+  <!-- Join Modal -->
+  <div id="joinModal">
+    <div class="modal-content">
+      <h3>Select Your Nation</h3>
+      <select id="nationSelect"></select><br>
+      <button id="confirmJoin">Join</button>
+      <button id="cancelJoin">Cancel</button>
+    </div>
+  </div>
+
+  <script src="static/lobby.js">
+  </script>
+</body>
+</html>

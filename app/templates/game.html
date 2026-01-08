@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diplomacy – Gra</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mapstyles.css') }}">
+  <style>
+    #map {
+      background: #e8e8e8;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1em 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1em;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 0.5em;
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2 id="gameTitle">Gra</h2>
+    <a href="../lobby"><button>Return to the Lobby</button></a>
+  </header>
+
+  <div class="card">
+    <h2>Players</h2>
+    <div id="players">
+      <p>Loading players...</p>
+    </div>
+    <h3>Game properties</h3>
+    <p><strong>Status:</strong> <span id="status"></span></p>
+    <p><strong>Turn:</strong> <span id="turn"></span></p>
+    <p><strong>Your Nation:</strong> <span id="myNation"></span></p>
+  </div>
+
+  <div id="info" class="info">Unit information</div>
+  <div id="svgContainer"></div>
+
+  <!-- <div id="map">[Game map – placeholder]</div> -->
+
+  <div class="grid">
+    <div class="card">
+      <h3>Your orders</h3>
+      <form id="orderForm">
+        <input type="text" id="orderText" placeholder="np. A Lon - Nth" required>
+        <button type="submit">Send order</button>
+      </form>
+      <div id="ordersList"></div>
+    </div>
+
+    <div class="card">
+      <h3>Messages</h3>
+      <div id="messages" style="max-height:200px; overflow-y:auto; background:#f9f9f9; border:1px solid #ccc; padding:0.5em; border-radius:4px;"></div>
+      <form id="msgForm" style="margin-top:0.5em;">
+        <select name="recipientScope" id="recipientScope">
+          <option value="all">All</option>
+          <option value="England">England</option>
+          <option value="France">France</option>
+          <option value="Germany">Germany</option>
+          <option value="Italy">Italy</option>
+          <option value="Austria">Austria</option>
+          <option value="Russia">Russia</option>
+          <option value="Turkey">Turkey</option>
+        </select>
+        <textarea id="msgText" placeholder="Send message..."></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+<script src="../static/game.js">
+</script>
+
+<!-- <script src=../../vite/main.ts></script> -->
+<!-- <script src=main.ts></script> -->
+ {{ vite_tags() }} 
+</body>
+
+</html>
