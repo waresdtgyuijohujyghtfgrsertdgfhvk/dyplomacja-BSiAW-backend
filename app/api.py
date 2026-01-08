@@ -1,5 +1,7 @@
 # app/api.py
-from flask import Blueprint, request, jsonify
+import logging
+
+from flask import Blueprint, request, jsonify, abort
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import desc
@@ -50,6 +52,7 @@ def register_user():
     u.set_password(password)
     db.session.add(u)
     db.session.commit()
+    logging.info(F"New user {username}")
     return jsonify({"ok": True, "user_id": u.id}), 201
 
 
@@ -64,12 +67,14 @@ def login_user_route():
         return jerr("invalid credentials", 401)
 
     login_user(u)
+    logging.info(F"User {username} login")
     return jsonify({"ok": True, "msg": f"logged in as {u.username}"})
 
 
 @api.post("/logout")
 @login_required
 def logout_user_route():
+    logging.info(F"User {current_user.id} login")
     logout_user()
     return jsonify({"ok": True, "msg": "logged out"})
 
@@ -286,13 +291,12 @@ def post_message(gid):
 @login_required
 def get_messages(gid):
     g = Game.query.get_or_404(gid)
-    user: Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first_or_404()
-    messages_from_user = Message.query.filter_by(game_id=g.id).filter_by(sender_id=user.id).order_by(
-        Message.created_at).all()
-    messages_to_user = Message.query.filter_by(game_id=g.id).filter_by(recipient_scope=f"direct:{user.id}").order_by(
-        Message.created_at).all()
-    public_messages = Message.query.filter_by(game_id=g.id).filter(Message.sender_id != user.id,
-                                                                   Message.recipient_scope == "all").all()
+    user:Nation = Nation.query.filter_by(game_id=g.id).filter_by(user_id=current_user.id).first()
+    if user is None:
+         return jerr("you have no access here", 403)
+    messages_from_user = Message.query.filter_by(game_id=g.id).filter_by(sender_id=user.id).order_by(Message.created_at).all()
+    messages_to_user = Message.query.filter_by(game_id=g.id).filter_by(recipient_scope=f"direct:{user.id}").order_by(Message.created_at).all()
+    public_messages = Message.query.filter_by(game_id=g.id).filter(Message.sender_id != user.id,Message.recipient_scope=="all").all()
     messages = messages_from_user + messages_to_user + public_messages
     other_nations: list[Nation] = Nation.query.filter_by(game_id=g.id).filter(Nation.id != current_user.id).all()
     other_nations_dict = dict(zip([n.id for n in other_nations], [n.name for n in other_nations]))
