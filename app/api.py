@@ -19,6 +19,14 @@ DEFAULT_NATIONS = [
 def jerr(msg, code=400):
     return jsonify({"ok": False, "error": msg}), code
 
+class OrderItem:
+    def __init__(self,src_region,dst_region):
+        self.src_region = src_region
+        self.dst_region = dst_region
+        self.support = 1
+        self.type = type
+
+
 
 def sanitize_html(string:str):
     return string.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -204,20 +212,32 @@ def add_nation(gid):
     name = (data.get("name") or "").strip()
     if not name:
         return jerr("nation name is required")
-    g = Game.query.get_or_404(gid)
-    # ensure not already taken
-    existing = Nation.query.filter_by(game_id=g.id, user_id=current_user.id).first()
-    if existing:
-        return jerr("You already joined this game.")
-    n = Nation.query.filter_by(game_id=g.id, name=name).first()
-    if not n:
-        return jerr("Invalid nation name.")
-    if n.user_id is not None:
-        return jerr("Nation already taken.")
-    n.user_id = current_user.id
+    n = Nation(game_id=g.id, user_id=user_id, name=name)
+    db.session.add(n); db.session.commit()
+    return jsonify({"ok": True, "nation_id": n.id}), 201
 
-    db.session.commit()
-    return jsonify({"ok": True, "nation_id": n.id, "nation_name": n.name}), 201
+# ------- TURN -------
+
+@api.post("/games/<int:gid>/new-turn")
+def advance_turn(gid):
+    g = Game.query.get_or_404(gid)
+    prev_turns = Turn.query.filter_by(game_id=g.id)
+    last_trun:Turn = prev_turns.query.order_by(Turn.id.desc()).first()
+    turn_orders = Orders.query.filter_by(game_id=g.id,turn_id=last_trun.id)
+    if last_trun.phase== "spring" or last_trun.phase== "fall":
+        regions = [line.spllit(',')[0] for line in last_trun.state.split("\n")]
+        orders:list[OrderItem] = []
+        for order in turn_orders:
+            for item in order.payload.split("\n"):
+                if item.contains("$H"):
+                    orders.append()
+        for region in regions:
+
+        year_no = data.get("number")
+        phase  = data.get("phase")
+    t = Turn(game_id=g.id, number=year_no, phase=phase)
+
+    return jsonify({"ok": True, "turn_id": t.id}), 201
 
 # ------- ORDERS -------
 
