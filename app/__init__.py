@@ -123,4 +123,4 @@ def create_app():
         return render_template("diplomacy_wiki.svg")
 
     return app
-import arbitration
+from app import arbitration
