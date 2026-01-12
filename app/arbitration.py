@@ -255,7 +255,7 @@ def auto_arbitration():
                     board_state.update(new_state)
                 for province, state in board_state.items():
                     state = (state[0],state[1].split("-")[0])
-                    board_state.update(state)
+                    board_state.update({province:state})
             if turn.phase == "fall":
                 new_turn.phase = "fall-disband"
                 for order in orders:
