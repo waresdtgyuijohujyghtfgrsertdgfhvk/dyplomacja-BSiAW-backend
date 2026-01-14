@@ -1,9 +1,9 @@
 from alembic import op
 
-# revision =
-# down_revision =
-# branch_labels = None
-# depends_on = None
+revision = "e16be34af36b"
+down_revision = "..."
+branch_labels = None
+depends_on = None
 
 def upgrade():
     op.execute("""
