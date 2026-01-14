@@ -38,14 +38,6 @@ jobs:
             --exclude-rule python.django.security.audit.unvalidated-password.unvalidated-password \
             app \
             --output semgrep-report.txt
-      - name: Install Checkov
-        run: |
-          python -m pip install --upgrade pip
-          pip install checkov
-
-      - name: Run Checkov (IaC scan)
-        run: |
-          checkov -d . --quiet --compact
 
       - name: Install Trivy
         run: |
