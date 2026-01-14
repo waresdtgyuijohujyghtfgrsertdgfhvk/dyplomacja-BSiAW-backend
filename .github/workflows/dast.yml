@@ -85,12 +85,14 @@ jobs:
       #  with:
       #    name: zap-report
       #    path: zap_report.html
+      - name: Install Nikto
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nikto
+
       - name: Run Nikto
         run: |
-          docker run --rm --network host nikto/nikto \
-          -h http://localhost:5000 \
-          -Format txt \
-          -output nikto_report.txt
+          nikto -h http://localhost:5000 -output nikto_report.txt
 
       - name: Fail if Nikto found critical patterns
         run: |
