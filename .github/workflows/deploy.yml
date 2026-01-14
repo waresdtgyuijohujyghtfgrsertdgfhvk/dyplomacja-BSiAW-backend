@@ -21,7 +21,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: P0stgre$
-          POSTGRES_DB: diplomats
+          POSTGRES_DB: diplomacy-postgres-server
         ports:
           - 5432:5432
         options: >-
@@ -34,7 +34,7 @@ jobs:
       DATABASE_URL: postgresql+psycopg2://postgres:P0stgre$@localhost:5432/diplomacy-postgres-server
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: diplomats
+      POSTGRES_DB: diplomacy-postgres-server
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
 
