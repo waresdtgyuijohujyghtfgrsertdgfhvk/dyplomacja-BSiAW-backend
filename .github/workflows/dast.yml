@@ -44,7 +44,7 @@ jobs:
 
       - name: Wait for Flask app
         run: |
-          until curl -s http://localhost:5000; do
+          until curl -s http://localhost:5173; do
             echo "Waiting for Flask app..."
             sleep 5
           done
@@ -52,7 +52,6 @@ jobs:
       - name: Run database migrations
         run: |
           docker exec myflaskapp flask db upgrade
-          docker exec myflaskapp flask db migrate
 
       # - name: Run ZAP scan
       #   run: |
