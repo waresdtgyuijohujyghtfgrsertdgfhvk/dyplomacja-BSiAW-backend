@@ -1,7 +1,7 @@
 from alembic import op
 
 revision = "e16be34af36b"
-down_revision = "..."
+down_revision = None
 branch_labels = None
 depends_on = None
 
