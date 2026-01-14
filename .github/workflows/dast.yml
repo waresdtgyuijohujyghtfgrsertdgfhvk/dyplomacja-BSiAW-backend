@@ -96,15 +96,22 @@ jobs:
 
       - name: Fail if Nikto found critical patterns
         run: |
-          if grep -Ei "OSVDB|VULNERABLE|CVE-" nikto_report.txt; then
+          if [ ! -f nikto_report.txt ]; then
+            echo "Nikto report not found"
+            exit 1
+          fi
+      
+          if grep -Eqi "OSVDB|VULNERABLE|CVE-" nikto_report.txt; then
             echo "Nikto found potential vulnerabilities"
             exit 1
+          fi
+
 
       - name: Install Wapiti
         run: |
           sudo apt-get update
           sudo apt-get install -y wapiti
-      - name: Run Wapiti (DAST)
+      - name: Run Wapiti
         run: |
           wapiti \
             -u http://localhost:5000 \
