@@ -4,9 +4,13 @@ WORKDIR /app
 
 COPY requirements.txt ./
 
+RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
+USER appuser
+
 RUN apt-get update && \
-    apt-get install -y libpq-dev gcc && \
-    apt-get clean
+    apt-get install -y --no-install-recommends libpq-dev gcc && \
+    rm -rf /var/lib/apt/lists/*
+
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
