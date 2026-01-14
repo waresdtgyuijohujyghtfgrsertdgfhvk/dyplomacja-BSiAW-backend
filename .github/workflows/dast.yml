@@ -40,7 +40,7 @@ jobs:
 
       - name: Start Flask App Container
         run: |
-          docker run --network=mynetwork --name myflaskapp -d -e DATABASE_URL=postgresql://user:password@mypostgres/mydatabase -p 5000:5000 myflaskapp
+          docker run --network=mynetwork --name myflaskapp -d -e DATABASE_URL=postgresql://user:password@mypostgres/mydatabase -p 5173:5173 myflaskapp
 
       - name: Wait for Flask app
         run: |
