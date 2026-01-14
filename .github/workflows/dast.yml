@@ -87,10 +87,10 @@ jobs:
       #    path: zap_report.html
       - name: Run Nikto
         run: |
-          docker run --rm --network=mynetwork sullo/nikto \
-            -h http://localhost:5000 \
-            -Format txt \
-            -output nikto_report.txt
+          docker run --rm --network=mynetwork nikto/nikto \
+          -h http://myflaskapp:5000 \
+          -Format txt \
+          -output nikto_report.txt
 
       - name: Fail if Nikto found critical patterns
         run: |
