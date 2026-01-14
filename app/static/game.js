@@ -79,7 +79,7 @@ async function loadMessages() {
   if (data.ok) {
     const box = document.getElementById("messages");
     box.innerHTML = data.messages.map(m => `
-      <div><strong>${m.sender_name}:</strong> ${m.text}</div>
+      <div><strong>${m.sender_name}->${m.recipient}:</strong> ${m.text}</div>
     `).join('') || "<p>No messages</p>";
     box.scrollTop = box.scrollHeight;
   }
@@ -92,7 +92,7 @@ document.getElementById("msgForm").onsubmit = async (e) => {
   const res = await fetch(`/api/games/${gid}/messages`, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ text, sender_id: myNation?.id })
+    body: JSON.stringify({ "text":text, "sender_id": myNation?.id ,"recipient_scope":recipientScope.value})
   });
   const data = await res.json();
   if (data.ok) {
