@@ -10,12 +10,16 @@ from flask_vite import Vite
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_apscheduler import APScheduler
+
+
 import sys
 from logging.config import dictConfig
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
+scheduler = APScheduler()
 
 def create_app():
 
@@ -50,7 +54,8 @@ def create_app():
             "frame-ancestors 'none'; "
         )
         return response
-                # static_url_path='/static')
+        # static_url_path='/static')
+
     limiter = Limiter(
         get_remote_address,
         app=app,
@@ -62,7 +67,7 @@ def create_app():
             "origins": [
                 "https://eternalsummer.cc",
                 "http://localhost:5173"
-                         ]
+            ]
         },
         r"/*": {
             "origins": [
@@ -80,11 +85,13 @@ def create_app():
     app.config['VITE_FOLDER_PATH'] = './vite'
 
     app.config.from_pyfile('../config.py', silent=True)
-    #app.config.setdefault("SECRET_KEY", "change_this_secret")
+    # app.config.setdefault("SECRET_KEY", "change_this_secret")
     db.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     login_manager.init_app(app)
+    scheduler.init_app(app)
+    scheduler.start()
 
     login_manager.login_view = "api.login_user_route"
 
@@ -93,12 +100,14 @@ def create_app():
         return jsonify({"ok": False, "error": "login required"}), 401
 
     @app.get("/healthz")
-    def healthz(): return "OK", 200
+    def healthz():
+        return "OK", 200
 
     # from app.api import api
     # app.register_blueprint(api)
     from .api import api
     app.register_blueprint(api)
+
     @app.route("/")
     def index():
         if current_user.is_authenticated:
@@ -110,6 +119,7 @@ def create_app():
     @limiter.limit("5 per minute")
     def rate_test():
         return {"ok": True}, 200
+
     @app.route("/login")
     @limiter.limit("5 per minute")
     def login_page():
@@ -134,5 +144,4 @@ def create_app():
         return render_template("diplomacy_wiki.svg")
 
     return app
-
-
+from app import arbitration

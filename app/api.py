@@ -1,4 +1,7 @@
 # app/api.py
+import datetime
+
+from flask import Blueprint, request, jsonify
 import logging
 
 from flask import Blueprint, request, jsonify, abort
@@ -14,6 +17,7 @@ DEFAULT_NATIONS = [
     "England", "France", "Germany",
     "Italy", "Austria", "Russia", "Turkey"
 ]
+DEFAULT_TURN_MINUTES = 5
 
 
 def jerr(msg, code=400):
