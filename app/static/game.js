@@ -30,7 +30,7 @@ async function loadGame() {
   const nationRes = await fetch(`/api/me`);
   const me = await nationRes.json();
   if (me.ok) {
-    const nation = data.nations.find(n => n.user_id === me.user.id);
+    const nation = data.nations.find(n => n.user_id === me.user.username);
     console.log(nation);
     if (nation) {
       myNation = nation;

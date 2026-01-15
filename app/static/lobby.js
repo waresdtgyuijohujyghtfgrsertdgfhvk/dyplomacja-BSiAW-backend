@@ -64,7 +64,7 @@ let selectedGameId = null;
       return;
     }
 
-    if (gameData.nations.some(n => String(n.user_id) === String(meData.user.id))) {
+    if (gameData.nations.some(n => String(n.user_id) === String(meData.user.username))) {
       window.location.href = `/game/${gameId}`;
       return;
     }

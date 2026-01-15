@@ -409,7 +409,13 @@ def auto_start():
     with scheduler.app.app_context():
         games = Game.query.filter(Game.status == 'lobby').all()
         for game in games:
-            if len(Nation.query.filter(Nation.game_id == game.id).filter(Nation.player_id is None).all()) == 0:
+            nations = Nation.query.filter(Nation.game_id == game.id)
+            empty_seat = False
+            for nation in nations:
+                if nation.user_id is None:
+                    empty_seat = True
+            if not empty_seat:
                 game.status = "active"
+                game.ends_at = datetime.now() + timedelta(days=1)
                 db.session.add(game)
         db.session.commit()
