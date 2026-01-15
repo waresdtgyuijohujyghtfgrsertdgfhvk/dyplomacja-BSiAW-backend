@@ -191,10 +191,17 @@ def get_game(gid):
     g = Game.query.get_or_404(gid)
     nations = Nation.query.filter_by(game_id=g.id).all()
     turns = Turn.query.filter_by(game_id=g.id).order_by(Turn.number).all()
+    nation_owners: dict[int, str] = dict()
+    for nation in nations:
+        user = User.query.filter_by(id=nation.user_id).first()
+        if user is not None:
+            nation_owners.update({nation.id: user.username})
+        else:
+            nation_owners.update({nation.id: ''})
     return jsonify({
         "ok": True,
         "game": {"id": g.id, "name": g.name, "status": g.status},
-        "nations": [{"id": n.id, "name": n.name, "user_id": User.query.filter_by(id=n.user_id).first().username} for n in nations],
+        "nations": [{"id": n.id, "name": n.name, "user_id": nation_owners[n.id]} for n in nations],
         "turns": [{"id": t.id, "number": t.number, "phase": t.phase} for t in turns]
     })
 
