@@ -18,4 +18,5 @@ COPY . .
 RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
 USER appuser
 
- CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["python", "-m", "app"]
+
