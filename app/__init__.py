@@ -41,7 +41,7 @@ def create_app():
     })
 
     app = Flask(__name__)
-
+    app.config.from_pyfile('../config.py', silent=True)
     @app.after_request
     def set_security_headers(response):
         response.headers["Content-Security-Policy"] = (
@@ -50,7 +50,7 @@ def create_app():
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
             "font-src 'self'; "
-            "connect-src 'self' http://localhost:5173 https://eternalsummer.cc;"
+            f"connect-src 'self' http://localhost:5173 https://{app.config['DOMAIN']};"
             "frame-ancestors 'none'; "
         )
         return response
@@ -65,13 +65,13 @@ def create_app():
     CORS(app, resources={
         r"/api/*": {
             "origins": [
-                "https://eternalsummer.cc",
+                f"https://{app.config['DOMAIN']}",
                 "http://localhost:5173"
             ]
         },
         r"/*": {
             "origins": [
-                "https://eternalsummer.cc",
+                f"https://{app.config['DOMAIN']}",
                 "http://localhost:5173"
             ]
         }
@@ -84,7 +84,6 @@ def create_app():
     app.config['VITE_AUTO_INSERT'] = True
     app.config['VITE_FOLDER_PATH'] = './vite'
 
-    app.config.from_pyfile('../config.py', silent=True)
     # app.config.setdefault("SECRET_KEY", "change_this_secret")
     db.init_app(app)
     migrate.init_app(app, db)
