@@ -96,7 +96,7 @@ class Arrow {
         let clockwise = -Math.PI / 8
         let antiClockwise = - clockwise 
         const arrowSide = 8
-        this.triangle.setAttribute("transform", );
+        this.triangle.setAttribute("transform", "");
 
         this.line.setAttribute("x1", String(this.start[0]));
         this.line.setAttribute("y1", String(this.start[1]));
@@ -359,27 +359,18 @@ function attachEvents() {
             mouse.x_initial_translate = 0;
             mouse.y_initial_translate = 0;
 
-            const uuid = object.uuid;
-            // console.log("armies", ...armies)
-            // console.log("armies", armies.map(army => army.uuid))
-            // console.log("fleets", ...fleets)
-            // console.log("fleets", fleets.map(fleet => fleet.uuid))
-            // console.log("object", object)
-            // console.log("object uuid", uuid)
-            const arrowBundle = arrowBundles.find(arrowBundle => arrowBundle.uuid === uuid);
-            // console.log("arrow bundles 2", ...arrowBundles)
-            // console.log("bundle", arrowBundle)
-            // console.log("armies", ...armies)
-            if (arrowBundle) {
-                mouse.arrow = arrowBundle.arrow;
-            } else {
-                const newArrow = new Arrow(uuid, [mouse.x_initial, mouse.y_initial]);
-                // console.log("arrow bundles 3", ...arrowBundles)
-                arrowBundles.push({arrow: newArrow, figure: element, uuid: uuid});
-                // console.log("arrow bundles 4", ...arrowBundles)
-                mouse.arrow = newArrow;
-            }
-            console.log("arrow bundles", ...arrowBundles)
+            // const uuid = object.uuid;
+            // const arrowBundle = arrowBundles.find(arrowBundle => arrowBundle.uuid === uuid);
+            // if (arrowBundle) {
+            //     mouse.arrow = arrowBundle.arrow;
+            // } else {
+            //     const newArrow = new Arrow(uuid, [mouse.x_initial, mouse.y_initial]);
+            //     // console.log("arrow bundles 3", ...arrowBundles)
+            //     arrowBundles.push({arrow: newArrow, figure: element, uuid: uuid});
+            //     // console.log("arrow bundles 4", ...arrowBundles)
+            //     mouse.arrow = newArrow;
+            // }
+            // console.log("arrow bundles", ...arrowBundles)
 
             const currentTransform = element.getAttribute('transform');
             if (currentTransform) {
@@ -402,10 +393,10 @@ function attachEvents() {
             const drag = mouse.draggingElement!;
             const arrow = mouse.arrow!;
             drag.setAttribute('transform', `translate(${mouse.x_delta + mouse.x_initial_translate}, ${mouse.y_delta + mouse.y_initial_translate})`);
-            const arrowBundle = arrowBundles.find(arrowBundle => arrowBundle.uuid === arrow.uuid);
+            // const arrowBundle = arrowBundles.find(arrowBundle => arrowBundle.uuid === arrow.uuid);
             const pos = [event.clientX, event.clientY];
-            console.log("pos", pos)
-            arrowBundle?.arrow.update(pos);
+            // console.log("pos", pos)
+            // arrowBundle?.arrow.update(pos);
         }
     });
 
