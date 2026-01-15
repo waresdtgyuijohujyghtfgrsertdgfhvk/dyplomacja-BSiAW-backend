@@ -407,7 +407,7 @@ def auto_arbitration():
 @scheduler.task('interval', id='auto_start', seconds=60, misfire_grace_time=900)
 def auto_start():
     with scheduler.app.app_context():
-        games = Game.query.filter(Game.state == 'lobby').all()
+        games = Game.query.filter(Game.status == 'lobby').all()
         for game in games:
             if len(Nation.query.filter(Nation.game_id == game.id).filter(Nation.player_id is None).all()) == 0:
                 game.status = "active"
