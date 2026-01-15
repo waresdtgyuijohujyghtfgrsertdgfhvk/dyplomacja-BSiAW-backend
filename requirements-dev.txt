@@ -1,4 +1,4 @@
 -r requirements.txt
-
+semgrep
 bandit
 pre-commit

@@ -194,7 +194,7 @@ def get_game(gid):
     return jsonify({
         "ok": True,
         "game": {"id": g.id, "name": g.name, "status": g.status},
-        "nations": [{"id": n.id, "name": n.name, "user_id": n.user_id} for n in nations],
+        "nations": [{"id": n.id, "name": n.name, "user_id": User.query.filter_by(id=n.user_id).first().username} for n in nations],
         "turns": [{"id": t.id, "number": t.number, "phase": t.phase} for t in turns]
     })
 
