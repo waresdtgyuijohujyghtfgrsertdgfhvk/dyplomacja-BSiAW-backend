@@ -15,3 +15,4 @@ flask-vite==0.6.1
 flask-cors
 flask-talisman
 Flask-Limiter
+flask_apscheduler
